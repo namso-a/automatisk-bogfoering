@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='6' y='2' width='20' height='28' rx='2' fill='%23c45d3e'/><path d='M10 9h12M10 14h12M10 19h8' stroke='%23fff' stroke-width='1.8' stroke-linecap='round'/><circle cx='22' cy='24' r='3' fill='%23fff' opacity='.6'/></svg>">
+    <title>{{ forening_name }} — Kvitteringer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #1a1a18;
+            --paper: #f6f3ed;
+            --warm: #e8e3d9;
+            --accent: #c45d3e;
+            --accent-hover: #a94e33;
+            --muted: #8a8578;
+            --success-bg: #e6f2e6;
+            --success-ink: #2d5a2d;
+            --radius: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            min-height: 100dvh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 440px;
+            margin: 0 auto;
+            padding: 2rem 1.25rem 3rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--warm);
+        }
+
+        .header h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.75rem;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+            margin-bottom: 0.35rem;
+        }
+
+        .header p {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        /* Form */
+        .field {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+        }
+
+        select, input[type="text"], input[type="tel"], textarea {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            color: var(--ink);
+            background: #fff;
+            border: 1.5px solid var(--warm);
+            border-radius: var(--radius);
+            outline: none;
+            transition: border-color 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 3.5rem;
+            max-height: 8rem;
+        }
+
+        select:focus, input:focus, textarea:focus {
+            border-color: var(--accent);
+        }
+
+        /* Radio group — pill buttons */
+        .radio-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .radio-option {
+            flex: 1;
+            display: block;
+            text-transform: none;
+            letter-spacing: 0;
+            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        .radio-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .radio-option span {
+            display: block;
+            text-align: center;
+            padding: 0.75rem 0.5rem;
+            border: 1.5px solid var(--warm);
+            border-radius: var(--radius);
+            background: #fff;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s, color 0.2s;
+            color: var(--ink);
+        }
+
+        .radio-option input[type="radio"]:checked + span {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .radio-option span:hover {
+            border-color: var(--accent);
+        }
+
+        /* Conditional refund fields */
+        .refund-fields {
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.25s ease, margin 0.35s ease;
+            margin-top: 0;
+        }
+
+        .refund-fields.visible {
+            max-height: 300px;
+            opacity: 1;
+            margin-top: 1.5rem;
+        }
+
+        .refund-fields .field:last-child {
+            margin-bottom: 0;
+        }
+
+        .refund-row {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .refund-row .field:first-child {
+            flex: 0 0 35%;
+        }
+
+        .refund-row .field:last-child {
+            flex: 1;
+        }
+
+        /* Upload area */
+        .upload-area {
+            position: relative;
+            border: 2px dashed var(--warm);
+            border-radius: var(--radius);
+            padding: 2rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            background: #fff;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--accent);
+            background: rgba(196, 93, 62, 0.03);
+        }
+
+        .upload-area.has-files {
+            border-style: solid;
+            border-color: var(--accent);
+            padding: 0.75rem 1rem;
+        }
+
+        .upload-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 0.75rem;
+            opacity: 0.35;
+        }
+
+        .upload-text {
+            font-size: 0.95rem;
+            color: var(--muted);
+        }
+
+        .upload-text strong {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .upload-area input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* File list (multi-upload) */
+        .file-list {
+            display: none;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .file-list.visible { display: flex; }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: rgba(196, 93, 62, 0.04);
+            border-radius: 8px;
+            padding: 0.4rem 0.5rem;
+        }
+
+        .file-thumb {
+            width: 44px;
+            height: 44px;
+            border-radius: 6px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .file-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 6px;
+            background: var(--warm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-size {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        .file-remove {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 0.4rem;
+            font-size: 1.1rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .file-remove:hover { color: var(--accent); }
+
+        .upload-placeholder { display: block; }
+        .has-files .upload-placeholder { display: none; }
+
+        .add-more {
+            display: none;
+            margin-top: 0.6rem;
+            font-size: 0.85rem;
+            color: var(--accent);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+        }
+
+        .has-files .add-more { display: inline-block; }
+
+        /* Submit */
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            background: var(--accent);
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 0.5rem;
+        }
+
+        .submit-btn:hover { background: var(--accent-hover); }
+        .submit-btn:active { transform: scale(0.985); }
+
+        .submit-btn:disabled {
+            background: var(--warm);
+            color: var(--muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading / progress state */
+        .submit-btn.loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .submit-btn.loading::after {
+            content: "";
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 20px; height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2.5px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .progress-text {
+            display: none;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 0.75rem;
+        }
+
+        .progress-text.visible { display: block; }
+
+        /* Success message */
+        .success {
+            display: none;
+            text-align: center;
+            padding: 2rem 1rem;
+            background: var(--success-bg);
+            border-radius: var(--radius);
+            margin-top: 1rem;
+        }
+
+        .success.visible { display: block; }
+
+        .success-check {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            background: var(--success-ink);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pop 0.3s ease;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .success h2 {
+            font-family: 'DM Serif Display', serif;
+            font-weight: 400;
+            font-size: 1.35rem;
+            color: var(--success-ink);
+            margin-bottom: 0.35rem;
+        }
+
+        .success p {
+            color: var(--success-ink);
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .success .again-btn {
+            display: inline-block;
+            margin-top: 1.25rem;
+            padding: 0.6rem 1.5rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--success-ink);
+            background: transparent;
+            border: 1.5px solid var(--success-ink);
+            border-radius: var(--radius);
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .again-btn:hover {
+            background: rgba(45, 90, 45, 0.08);
+        }
+
+        /* Error */
+        .error-msg {
+            display: none;
+            padding: 0.75rem 1rem;
+            background: #fce8e8;
+            color: #8b2020;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .error-msg.visible { display: block; }
+
+        /* OCR result summary */
+        .ocr-results {
+            margin-top: 1rem;
+            text-align: left;
+        }
+
+        .ocr-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(45, 90, 45, 0.15);
+            font-size: 0.85rem;
+        }
+
+        .ocr-item:last-child { border-bottom: none; }
+
+        .ocr-label {
+            color: var(--success-ink);
+            opacity: 0.7;
+        }
+
+        .ocr-value {
+            font-weight: 500;
+            color: var(--success-ink);
+        }
+
+        /* Duplicate warning */
+        .duplicate-warn {
+            background: #fff8e6;
+            color: #7a6200;
+            padding: 0.6rem 0.85rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            margin-top: 0.35rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ forening_name }}</h1>
+            <p>Indsend kvittering til bogføring</p>
+        </div>
+
+        <form id="receipt-form" enctype="multipart/form-data">
+            <div class="field">
+                <label for="name">Navn</label>
+                <input type="text" id="name" name="name" placeholder="Dit fulde navn" required>
+            </div>
+
+            <div class="field">
+                <label>Type</label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="payment_type" value="udlæg" required>
+                        <span>Eget udlæg</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="payment_type" value="foreningskort" required>
+                        <span>Foreningens kort</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="refund-fields" id="refund-fields">
+                <div class="field">
+                    <label for="phone">Telefonnummer</label>
+                    <input type="tel" id="phone" name="phone" placeholder="Fx 12 34 56 78">
+                </div>
+                <div class="refund-row">
+                    <div class="field">
+                        <label for="reg_nr">Reg. nr.</label>
+                        <input type="text" id="reg_nr" name="reg_nr" placeholder="4 cifre" inputmode="numeric" maxlength="4">
+                    </div>
+                    <div class="field">
+                        <label for="konto_nr">Kontonummer</label>
+                        <input type="text" id="konto_nr" name="konto_nr" placeholder="Op til 10 cifre" inputmode="numeric" maxlength="10">
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Kvittering(er)</label>
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-placeholder">
+                        <svg class="upload-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="4" y="8" width="32" height="24" rx="3" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="14" cy="18" r="3" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M4 28l10-8 6 5 8-10 8 9" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                        </svg>
+                        <div class="upload-text">
+                            <strong>Tag billede</strong> eller vælg filer
+                        </div>
+                    </div>
+                    <div class="file-list" id="file-list"></div>
+                    <button type="button" class="add-more" id="add-more-btn">+ Tilføj flere</button>
+                    <input type="file" id="receipt" name="receipt" accept="image/*,.pdf,.heic,.heif" multiple>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="comment">Kommentar <span style="font-weight:400;text-transform:none;letter-spacing:0">(valgfrit)</span></label>
+                <textarea id="comment" name="comment" placeholder="Fx &quot;Indkøb til sommerlejr&quot;"></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submit-btn">Send kvittering</button>
+            <div class="progress-text" id="progress-text"></div>
+            <div class="error-msg" id="error-msg"></div>
+        </form>
+
+        <div class="success" id="success">
+            <div class="success-check">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h2>Tak!</h2>
+            <p id="success-text">Din kvittering er modtaget og bliver behandlet.</p>
+            <div class="ocr-results" id="ocr-results"></div>
+            <a href="/" class="again-btn">Indsend flere</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('receipt-form');
+        const fileInput = document.getElementById('receipt');
+        const uploadArea = document.getElementById('upload-area');
+        const fileListEl = document.getElementById('file-list');
+        const addMoreBtn = document.getElementById('add-more-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const errorMsg = document.getElementById('error-msg');
+        const successDiv = document.getElementById('success');
+        const successText = document.getElementById('success-text');
+        const ocrResults = document.getElementById('ocr-results');
+        const progressText = document.getElementById('progress-text');
+        const refundFields = document.getElementById('refund-fields');
+        const phoneInput = document.getElementById('phone');
+        const regInput = document.getElementById('reg_nr');
+        const kontoInput = document.getElementById('konto_nr');
+
+        let selectedFiles = [];
+        const ALLOWED_TYPES = ['image/', 'application/pdf'];
+        const ALLOWED_EXT = ['.heic', '.heif'];
+
+        function isAllowedFile(f) {
+            if (ALLOWED_TYPES.some(t => f.type.startsWith(t))) return true;
+            const ext = f.name.toLowerCase().match(/\.[^.]+$/);
+            return ext && ALLOWED_EXT.includes(ext[0]);
+        }
+
+        function isImageFile(f) {
+            return f.type.startsWith('image/');
+        }
+
+        // --- Duplicate detection via SHA-256 hash ---
+        const seenHashes = new Set();
+
+        async function hashFile(file) {
+            const buf = await file.arrayBuffer();
+            const hash = await crypto.subtle.digest('SHA-256', buf);
+            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // --- Client-side image compression ---
+        function compressImage(file, maxDim = 1600, quality = 0.8) {
+            return new Promise((resolve) => {
+                if (!file.type.startsWith('image/') || file.type === 'image/gif') {
+                    resolve(file);
+                    return;
+                }
+                const img = new window.Image();
+                const url = URL.createObjectURL(file);
+                img.onload = () => {
+                    URL.revokeObjectURL(url);
+                    const { width: w, height: h } = img;
+                    if (w <= maxDim && h <= maxDim && file.size <= 1024 * 1024) {
+                        resolve(file);
+                        return;
+                    }
+                    const scale = Math.min(maxDim / Math.max(w, h), 1);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.round(w * scale);
+                    canvas.height = Math.round(h * scale);
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob((blob) => {
+                        const compressed = new File([blob], file.name, { type: 'image/jpeg', lastModified: file.lastModified });
+                        resolve(compressed);
+                    }, 'image/jpeg', quality);
+                };
+                img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+                img.src = url;
+            });
+        }
+
+        // --- Payment type toggle ---
+        document.querySelectorAll('input[name="payment_type"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                const isUdlaeg = radio.value === 'udlæg' && radio.checked;
+                refundFields.classList.toggle('visible', isUdlaeg);
+                phoneInput.required = isUdlaeg;
+                regInput.required = isUdlaeg;
+                kontoInput.required = isUdlaeg;
+                if (!isUdlaeg) {
+                    phoneInput.value = '';
+                    regInput.value = '';
+                    kontoInput.value = '';
+                }
+            });
+        });
+
+        // --- Multi-file handling ---
+        fileInput.addEventListener('change', () => {
+            addFiles(Array.from(fileInput.files));
+            fileInput.value = '';
+        });
+
+        addMoreBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.click();
+        });
+
+        async function addFiles(newFiles) {
+            let duplicateFound = false;
+            for (const f of newFiles) {
+                if (!isAllowedFile(f)) continue;
+                if (selectedFiles.some(s => s.name === f.name && s.size === f.size)) continue;
+
+                const hash = await hashFile(f);
+                if (seenHashes.has(hash)) {
+                    duplicateFound = true;
+                    continue;
+                }
+                seenHashes.add(hash);
+                selectedFiles.push(f);
+            }
+            renderFileList();
+            if (duplicateFound) {
+                showDuplicateWarning();
+            }
+        }
+
+        function showDuplicateWarning() {
+            let warn = uploadArea.querySelector('.duplicate-warn');
+            if (!warn) {
+                warn = document.createElement('div');
+                warn.className = 'duplicate-warn';
+                warn.textContent = 'En eller flere filer er allerede tilføjet og blev sprunget over.';
+                uploadArea.appendChild(warn);
+            }
+            clearTimeout(warn._timer);
+            warn._timer = setTimeout(() => warn.remove(), 4000);
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            renderFileList();
+        }
+
+        function renderFileList() {
+            if (selectedFiles.length === 0) {
+                uploadArea.classList.remove('has-files');
+                fileListEl.classList.remove('visible');
+                fileListEl.innerHTML = '';
+                return;
+            }
+
+            uploadArea.classList.add('has-files');
+            fileListEl.classList.add('visible');
+            fileListEl.innerHTML = '';
+
+            selectedFiles.forEach((file, i) => {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+
+                if (isImageFile(file)) {
+                    const thumb = document.createElement('img');
+                    thumb.className = 'file-thumb';
+                    thumb.alt = '';
+                    const reader = new FileReader();
+                    reader.onload = (e) => { thumb.src = e.target.result; };
+                    reader.readAsDataURL(file);
+                    item.appendChild(thumb);
+                } else {
+                    const icon = document.createElement('div');
+                    icon.className = 'file-icon';
+                    const ext = file.name.split('.').pop().toUpperCase();
+                    icon.textContent = ext;
+                    item.appendChild(icon);
+                }
+
+                const info = document.createElement('div');
+                info.className = 'file-info';
+                info.innerHTML = `<div class="file-name">${file.name}</div><div class="file-size">${(file.size / 1024).toFixed(0)} KB</div>`;
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'file-remove';
+                removeBtn.innerHTML = '&times;';
+                removeBtn.setAttribute('aria-label', 'Fjern');
+                removeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeFile(i);
+                });
+
+                item.appendChild(info);
+                item.appendChild(removeBtn);
+                fileListEl.appendChild(item);
+            });
+        }
+
+        // --- Drag & drop ---
+        ['dragenter', 'dragover'].forEach(evt => {
+            uploadArea.addEventListener(evt, (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(evt => {
+            uploadArea.addEventListener(evt, (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            const files = Array.from(e.dataTransfer.files).filter(isAllowedFile);
+            if (files.length) addFiles(files);
+        });
+
+        // --- Render OCR results ---
+        function renderOcrResults(receipts) {
+            ocrResults.innerHTML = '';
+            if (!receipts.length) return;
+
+            const labels = { vendor: 'Butik', description: 'Beskrivelse', amount: 'Beløb', date: 'Dato', category: 'Kategori' };
+            for (const r of receipts) {
+                for (const [key, label] of Object.entries(labels)) {
+                    let val = r[key];
+                    if (val == null || val === '') continue;
+                    if (key === 'amount') val = `${val} ${r.currency || 'DKK'}`;
+                    const row = document.createElement('div');
+                    row.className = 'ocr-item';
+                    row.innerHTML = `<span class="ocr-label">${label}</span><span class="ocr-value">${val}</span>`;
+                    ocrResults.appendChild(row);
+                }
+                if (receipts.length > 1) {
+                    const sep = document.createElement('hr');
+                    sep.style.cssText = 'border:none;border-top:1px solid rgba(45,90,45,0.1);margin:0.25rem 0';
+                    ocrResults.appendChild(sep);
+                }
+            }
+        }
+
+        // --- Submit: compress all files, send as single batch, stream results ---
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            errorMsg.classList.remove('visible');
+
+            if (selectedFiles.length === 0) {
+                errorMsg.textContent = 'Vedhæft venligst mindst én kvittering.';
+                errorMsg.classList.add('visible');
+                return;
+            }
+
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+
+            const total = selectedFiles.length;
+            let completed = 0;
+            let errors = [];
+            let receipts = [];
+
+            progressText.textContent = total > 1
+                ? `Komprimerer ${total} kvitteringer...`
+                : 'Komprimerer kvittering...';
+            progressText.classList.add('visible');
+
+            // Compress all files first
+            const formData = new FormData();
+            formData.append('name', document.getElementById('name').value);
+            formData.append('payment_type', document.querySelector('input[name="payment_type"]:checked')?.value || '');
+            formData.append('phone', phoneInput.value);
+            formData.append('reg_nr', regInput.value);
+            formData.append('konto_nr', kontoInput.value);
+            formData.append('comment', document.getElementById('comment').value);
+
+            for (let i = 0; i < total; i++) {
+                const compressed = await compressImage(selectedFiles[i]);
+                formData.append('receipt', compressed);
+            }
+
+            if (total > 1) {
+                const est = Math.ceil(total * 8 / 60);
+                progressText.textContent = `Behandler kvittering 1 af ${total} (ca. ${est} min)...`;
+            } else {
+                progressText.textContent = 'Behandler kvittering...';
+            }
+
+            try {
+                const res = await fetch('/upload-batch', { method: 'POST', body: formData });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    errors.push(data.error || 'Ukendt fejl');
+                } else {
+                    // Read NDJSON stream line by line
+                    const reader = res.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop(); // keep incomplete line in buffer
+
+                        for (const line of lines) {
+                            if (!line.trim()) continue;
+                            try {
+                                const result = JSON.parse(line);
+                                if (result.status === 'ok') {
+                                    completed++;
+                                    if (result.receipt) receipts.push(result.receipt);
+                                } else {
+                                    errors.push(result.error || 'Ukendt fejl');
+                                }
+                                if (total > 1) {
+                                    const done = result.index + 1;
+                                    if (done < total) {
+                                        progressText.textContent = `Behandler kvittering ${done + 1} af ${total}...`;
+                                    } else {
+                                        progressText.textContent = 'Færdig!';
+                                    }
+                                }
+                            } catch (_) {}
+                        }
+                    }
+                }
+            } catch (err) {
+                errors.push('Kunne ikke forbinde til serveren');
+            }
+
+            submitBtn.classList.remove('loading');
+            submitBtn.disabled = false;
+            progressText.classList.remove('visible');
+
+            if (completed > 0) {
+                form.style.display = 'none';
+                if (completed === 1 && errors.length === 0) {
+                    successText.textContent = 'Din kvittering er modtaget og bogført.';
+                } else if (errors.length === 0) {
+                    successText.textContent = `Alle ${completed} kvitteringer er modtaget!`;
+                } else {
+                    successText.textContent = `${completed} af ${total} kvitteringer modtaget. ${errors.length} fejlede.`;
+                }
+                renderOcrResults(receipts);
+                successDiv.classList.add('visible');
+                selectedFiles = [];
+            } else {
+                errorMsg.textContent = errors[0] || 'Noget gik galt. Prøv igen.';
+                errorMsg.classList.add('visible');
+            }
+        });
+    </script>
+</body>
+</html>

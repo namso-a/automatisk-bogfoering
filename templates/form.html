@@ -956,13 +956,16 @@
                             if (!line.trim()) continue;
                             try {
                                 const result = JSON.parse(line);
-                                if (result.status === 'ok') {
+                                if (result.step) {
+                                    progressText.textContent = result.message;
+                                } else if (result.status === 'ok') {
                                     completed++;
                                     if (result.receipt) receipts.push(result.receipt);
                                 } else {
-                                    errors.push(result.error || 'Ukendt fejl');
+                                    const fname = result.filename || `Kvittering ${(result.index || 0) + 1}`;
+                                    errors.push(`${fname}: ${result.error || 'Ukendt fejl'}`);
                                 }
-                                if (total > 1) {
+                                if (result.status && total > 1) {
                                     const done = result.index + 1;
                                     if (done < total) {
                                         progressText.textContent = `Behandler kvittering ${done + 1} af ${total}...`;
@@ -970,7 +973,9 @@
                                         progressText.textContent = 'Færdig!';
                                     }
                                 }
-                            } catch (_) {}
+                            } catch (_) {
+                                errors.push('Kunne ikke læse svar fra server');
+                            }
                         }
                     }
                 }
@@ -983,6 +988,8 @@
             progressText.classList.remove('visible');
 
             if (completed > 0) {
+                form.reset();
+                refundFields.classList.remove('visible');
                 form.style.display = 'none';
                 submitBar.style.display = 'none';
                 if (completed === 1 && errors.length === 0) {

@@ -16,6 +16,15 @@ import requests
 
 ROOT = Path(__file__).resolve().parent.parent
 
+_FORMULA_CHARS = frozenset("=+−-@\t\r\n")
+
+
+def _sanitize(value):
+    """Prefix dangerous characters to prevent spreadsheet formula injection."""
+    if isinstance(value, str) and value and value[0] in _FORMULA_CHARS:
+        return "'" + value
+    return value
+
 
 def send_receipt(
     receipt_data: dict,
@@ -55,19 +64,19 @@ def send_receipt(
         )
 
     payload = {
-        "name": submitter,
+        "name": _sanitize(submitter),
         "payment_type": payment_type,
-        "phone": phone,
-        "reg_nr": reg_nr,
-        "konto_nr": konto_nr,
+        "phone": _sanitize(phone),
+        "reg_nr": _sanitize(reg_nr),
+        "konto_nr": _sanitize(konto_nr),
         "amount": receipt_data.get("amount"),
         "date": receipt_data.get("date"),
-        "vendor": receipt_data.get("vendor"),
+        "vendor": _sanitize(receipt_data.get("vendor", "")),
         "category": receipt_data.get("category", "Andet"),
         "currency": receipt_data.get("currency", "DKK"),
-        "comment": comment,
-        "description": receipt_data.get("description", ""),
-        "confidence_note": receipt_data.get("confidence_note", ""),
+        "comment": _sanitize(comment),
+        "description": _sanitize(receipt_data.get("description", "")),
+        "confidence_note": _sanitize(receipt_data.get("confidence_note", "")),
         "image_base64": image_base64,
         "image_filename": image_filename,
     }

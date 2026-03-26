@@ -7,6 +7,7 @@ POST /upload  — Receives receipt image, runs OCR, sends to Google Sheets via A
 
 import base64
 import json
+import re
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -27,6 +28,33 @@ TMP_DIR.mkdir(exist_ok=True)
 def load_config():
     with open(ROOT / "config.json", "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def validate_ocr_result(receipt_data: dict) -> dict:
+    """Flag missing or invalid OCR fields via confidence_note (never reject)."""
+    warnings = []
+    amount = receipt_data.get("amount")
+    if amount is None:
+        warnings.append("Beløb ikke genkendt")
+    else:
+        try:
+            float(amount)
+        except (ValueError, TypeError):
+            warnings.append("Beløb ikke genkendt")
+
+    date = receipt_data.get("date")
+    if not date or not re.match(r"^\d{4}-\d{2}-\d{2}$", str(date)):
+        warnings.append("Dato ikke genkendt")
+
+    if not receipt_data.get("vendor"):
+        warnings.append("Butik ikke genkendt")
+
+    if warnings:
+        existing = receipt_data.get("confidence_note", "")
+        sep = "; " if existing else ""
+        receipt_data["confidence_note"] = existing + sep + "; ".join(warnings)
+
+    return receipt_data
 
 
 @app.route("/")
@@ -70,6 +98,8 @@ def upload():
         except Exception as e:
             app.logger.error("OCR fejl for %s: %s", file.filename, e)
             return jsonify({"error": f"OCR fejlede: {e}"}), 500
+
+        receipt_data = validate_ocr_result(receipt_data)
 
         # Step 2: Read image as base64 and send to Apps Script (Drive + Sheets)
         from tools.send_to_sheets import send_receipt
@@ -139,7 +169,11 @@ def upload_batch():
 
         for i, (temp_path, original_name, ext) in enumerate(saved):
             try:
+                yield json.dumps({"index": i, "step": "ocr", "message": f"Scanner kvittering {i + 1} af {len(saved)}..."}) + "\n"
                 receipt_data = extract_receipt_data(str(temp_path))
+                receipt_data = validate_ocr_result(receipt_data)
+
+                yield json.dumps({"index": i, "step": "sheets", "message": "Sender til Google Sheets..."}) + "\n"
 
                 with open(temp_path, "rb") as f:
                     image_b64 = base64.b64encode(f.read()).decode("utf-8")
@@ -163,7 +197,7 @@ def upload_batch():
 
             except Exception as e:
                 app.logger.error("Batch fejl for %s: %s", original_name, e)
-                yield json.dumps({"index": i, "status": "error", "error": str(e)}) + "\n"
+                yield json.dumps({"index": i, "status": "error", "error": str(e), "filename": original_name}) + "\n"
 
             finally:
                 if temp_path.exists():

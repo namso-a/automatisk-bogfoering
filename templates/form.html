@@ -34,28 +34,29 @@
         .container {
             max-width: 440px;
             margin: 0 auto;
-            padding: 2rem 1.25rem 3rem;
+            padding: 1.25rem 1.25rem 6rem;
+            padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
         }
 
         /* Header */
         .header {
             text-align: center;
-            margin-bottom: 2.5rem;
-            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
             border-bottom: 1px solid var(--warm);
         }
 
         .header h1 {
             font-family: 'DM Serif Display', serif;
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             font-weight: 400;
             letter-spacing: -0.01em;
-            margin-bottom: 0.35rem;
+            margin-bottom: 0.2rem;
         }
 
         .header p {
             color: var(--muted);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         /* Form */
@@ -310,6 +311,24 @@
 
         .has-files .add-more { display: inline-block; }
 
+        /* Sticky submit bar */
+        .submit-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--paper);
+            padding: 0.75rem 1.25rem;
+            padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+            border-top: 1px solid var(--warm);
+            z-index: 100;
+        }
+
+        .submit-bar-inner {
+            max-width: 440px;
+            margin: 0 auto;
+        }
+
         /* Submit */
         .submit-btn {
             display: block;
@@ -324,7 +343,6 @@
             border-radius: var(--radius);
             cursor: pointer;
             transition: background 0.2s, transform 0.1s;
-            margin-top: 0.5rem;
         }
 
         .submit-btn:hover { background: var(--accent-hover); }
@@ -470,6 +488,46 @@
             color: var(--success-ink);
         }
 
+        /* Camera-first upload buttons */
+        .upload-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .upload-btn-camera, .upload-btn-gallery {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            padding: 0.7rem 0.5rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: var(--radius);
+            cursor: pointer;
+            border: none;
+        }
+
+        .upload-btn-camera {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .upload-btn-camera:hover { background: var(--accent-hover); }
+
+        .upload-btn-gallery {
+            background: #fff;
+            color: var(--ink);
+            border: 1.5px solid var(--warm);
+        }
+
+        .upload-btn-gallery:hover { border-color: var(--accent); }
+
+        .has-files .upload-buttons { display: none; }
+        .has-files .upload-placeholder { display: none; }
+
         /* Duplicate warning */
         .duplicate-warn {
             background: #fff8e6;
@@ -534,13 +592,21 @@
                             <circle cx="14" cy="18" r="3" stroke="currentColor" stroke-width="1.5"/>
                             <path d="M4 28l10-8 6 5 8-10 8 9" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
                         </svg>
-                        <div class="upload-text">
-                            <strong>Tag billede</strong> eller vælg filer
+                        <div class="upload-buttons">
+                            <button type="button" class="upload-btn-camera" id="camera-btn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                Tag billede
+                            </button>
+                            <button type="button" class="upload-btn-gallery" id="gallery-btn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                                Vælg filer
+                            </button>
                         </div>
                     </div>
                     <div class="file-list" id="file-list"></div>
                     <button type="button" class="add-more" id="add-more-btn">+ Tilføj flere</button>
                     <input type="file" id="receipt" name="receipt" accept="image/*,.pdf,.heic,.heif" multiple>
+                    <input type="file" id="receipt-camera" accept="image/*" capture="environment" multiple style="display:none">
                 </div>
             </div>
 
@@ -549,10 +615,15 @@
                 <textarea id="comment" name="comment" placeholder="Fx &quot;Indkøb til sommerlejr&quot;"></textarea>
             </div>
 
-            <button type="submit" class="submit-btn" id="submit-btn">Send kvittering</button>
-            <div class="progress-text" id="progress-text"></div>
             <div class="error-msg" id="error-msg"></div>
         </form>
+
+        <div class="submit-bar" id="submit-bar">
+            <div class="submit-bar-inner">
+                <button type="submit" form="receipt-form" class="submit-btn" id="submit-btn">Send kvittering</button>
+                <div class="progress-text" id="progress-text"></div>
+            </div>
+        </div>
 
         <div class="success" id="success">
             <div class="success-check">
@@ -568,10 +639,14 @@
     <script>
         const form = document.getElementById('receipt-form');
         const fileInput = document.getElementById('receipt');
+        const cameraInput = document.getElementById('receipt-camera');
         const uploadArea = document.getElementById('upload-area');
         const fileListEl = document.getElementById('file-list');
         const addMoreBtn = document.getElementById('add-more-btn');
+        const cameraBtn = document.getElementById('camera-btn');
+        const galleryBtn = document.getElementById('gallery-btn');
         const submitBtn = document.getElementById('submit-btn');
+        const submitBar = document.getElementById('submit-bar');
         const errorMsg = document.getElementById('error-msg');
         const successDiv = document.getElementById('success');
         const successText = document.getElementById('success-text');
@@ -657,6 +732,21 @@
         fileInput.addEventListener('change', () => {
             addFiles(Array.from(fileInput.files));
             fileInput.value = '';
+        });
+
+        cameraInput.addEventListener('change', () => {
+            addFiles(Array.from(cameraInput.files));
+            cameraInput.value = '';
+        });
+
+        cameraBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            cameraInput.click();
+        });
+
+        galleryBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.click();
         });
 
         addMoreBtn.addEventListener('click', (e) => {
@@ -894,6 +984,7 @@
 
             if (completed > 0) {
                 form.style.display = 'none';
+                submitBar.style.display = 'none';
                 if (completed === 1 && errors.length === 0) {
                     successText.textContent = 'Din kvittering er modtaget og bogført.';
                 } else if (errors.length === 0) {

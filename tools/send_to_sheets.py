@@ -36,6 +36,7 @@ def send_receipt(
     phone: str = "",
     reg_nr: str = "",
     konto_nr: str = "",
+    udvalg: str = "",
     apps_script_url: str | None = None,
 ) -> str:
     """
@@ -66,6 +67,7 @@ def send_receipt(
     payload = {
         "name": _sanitize(submitter),
         "payment_type": payment_type,
+        "udvalg": _sanitize(udvalg),
         "phone": _sanitize(phone),
         "reg_nr": _sanitize(reg_nr),
         "konto_nr": _sanitize(konto_nr),

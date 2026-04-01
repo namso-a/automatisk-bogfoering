@@ -15,7 +15,7 @@
 
 // Kolonnerækkefølge i Sheet
 var HEADERS = [
-  "Dato", "Indsendt", "Navn", "Type", "Telefon", "Reg.nr.", "Kontonr.",
+  "Dato", "Indsendt", "Navn", "Type", "Udvalg", "Telefon", "Reg.nr.", "Kontonr.",
   "Butik", "Beskrivelse", "Beløb", "Valuta", "Kategori", "Kommentar", "Kvittering",
   "Status", "Udbetalt dato"
 ];
@@ -24,12 +24,51 @@ var HEADERS = [
 var DRIVE_FOLDER_NAME = "Kvitteringer";
 
 /**
+ * Håndterer GET-requests — returnerer Sheet-data som JSON (til dashboard).
+ */
+function doGet(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var lastRow = sheet.getLastRow();
+
+    if (lastRow < 2) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: "ok", headers: HEADERS, rows: [] }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var data = sheet.getRange(2, 1, lastRow - 1, HEADERS.length).getValues();
+    var rows = data.map(function(row, i) {
+      var obj = { _row: i + 2 };
+      for (var j = 0; j < HEADERS.length; j++) {
+        obj[HEADERS[j]] = row[j];
+      }
+      return obj;
+    });
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "ok", headers: HEADERS, rows: rows }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "error", message: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
  * Håndterer POST-requests fra Flask-appen.
- * Modtager kvitteringsdata + base64-billede, gemmer i Drive og Sheet.
+ * Router mellem kvitteringsupload og statusopdatering.
  */
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
+
+    // Statusopdatering fra dashboard
+    if (data.action === "updateStatus") {
+      return updateRowStatus(data);
+    }
 
     // 1. Upload billede til Google Drive
     var imageLink = uploadImageToDrive(data.image_base64, data.image_filename);
@@ -47,6 +86,27 @@ function doPost(e) {
       .createTextOutput(JSON.stringify({ status: "error", message: error.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+/**
+ * Opdaterer Status og Udbetalt dato for en specifik række.
+ */
+function updateRowStatus(data) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var row = data.row;
+  var statusCol = HEADERS.indexOf("Status") + 1;
+  var udbetalCol = HEADERS.indexOf("Udbetalt dato") + 1;
+
+  if (data.status) {
+    sheet.getRange(row, statusCol).setValue(data.status);
+  }
+  if (data.udbetalt_dato) {
+    sheet.getRange(row, udbetalCol).setValue(data.udbetalt_dato);
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: "ok" }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 /**
@@ -122,6 +182,7 @@ function appendRow(data, imageLink) {
     now,                       // Indsendt
     data.name || "",           // Navn
     data.payment_type || "",   // Type (udlæg / foreningskort)
+    data.udvalg || "",         // Udvalg
     data.phone || "",          // Telefon
     data.reg_nr || "",         // Reg.nr.
     data.konto_nr || "",       // Kontonr.

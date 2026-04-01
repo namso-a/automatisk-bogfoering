@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='6' y='2' width='20' height='28' rx='2' fill='%23c45d3e'/><path d='M10 9h12M10 14h12M10 19h8' stroke='%23fff' stroke-width='1.8' stroke-linecap='round'/><circle cx='22' cy='24' r='3' fill='%23fff' opacity='.6'/></svg>">
+    <title>{{ forening_name }} — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --ink: #1a1a18;
+            --paper: #f6f3ed;
+            --warm: #e8e3d9;
+            --accent: #c45d3e;
+            --accent-hover: #a94e33;
+            --muted: #8a8578;
+            --success-bg: #e6f2e6;
+            --success-ink: #2d5a2d;
+            --radius: 10px;
+            --card-bg: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            min-height: 100dvh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Layout ── */
+        .page-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.5rem 1.25rem 4rem;
+        }
+
+        /* ── Header ── */
+        .header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 1rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid var(--warm);
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .header-left h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.75rem;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+            line-height: 1.1;
+        }
+
+        .header-left p {
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-top: 0.2rem;
+        }
+
+        .header-right a {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 0.45rem 0.9rem;
+            border: 1.5px solid var(--warm);
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            transition: color 0.2s, border-color 0.2s;
+            white-space: nowrap;
+        }
+
+        .header-right a:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* ── Filter bar ── */
+        .filter-bar {
+            background: var(--card-bg);
+            border: 1px solid var(--warm);
+            border-radius: var(--radius);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            flex: 1 1 130px;
+            min-width: 0;
+        }
+
+        .filter-group label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+        }
+
+        .filter-group select,
+        .filter-group input[type="date"] {
+            width: 100%;
+            padding: 0.55rem 0.75rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            color: var(--ink);
+            background: var(--paper);
+            border: 1.5px solid var(--warm);
+            border-radius: 8px;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: border-color 0.2s;
+        }
+
+        .filter-group select:focus,
+        .filter-group input[type="date"]:focus {
+            border-color: var(--accent);
+        }
+
+        .filter-group select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a8578' stroke-width='1.5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            padding-right: 2rem;
+        }
+
+        .filter-reset {
+            flex: 0 0 auto;
+            align-self: flex-end;
+            padding: 0.55rem 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--muted);
+            background: var(--paper);
+            border: 1.5px solid var(--warm);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: color 0.2s, border-color 0.2s;
+            white-space: nowrap;
+        }
+
+        .filter-reset:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* ── Tabs ── */
+        .tab-nav {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid var(--warm);
+            margin-bottom: 1.75rem;
+        }
+
+        .tab-btn {
+            padding: 0.65rem 1.25rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--muted);
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            cursor: pointer;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--ink);
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ── Summary cards ── */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--warm);
+            border-radius: var(--radius);
+            padding: 1.1rem 1.25rem;
+        }
+
+        .card-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-value {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.65rem;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            color: var(--ink);
+            line-height: 1;
+        }
+
+        .card-sub {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 0.35rem;
+        }
+
+        /* ── Charts ── */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--warm);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+        }
+
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .chart-title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin-bottom: 1rem;
+        }
+
+        .chart-container {
+            position: relative;
+        }
+
+        /* ── Table ── */
+        .table-wrap {
+            background: var(--card-bg);
+            border: 1px solid var(--warm);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table-wrap thead th {
+            padding: 0.75rem 1rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            background: var(--paper);
+            text-align: left;
+            border-bottom: 1px solid var(--warm);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s;
+        }
+
+        .table-wrap thead th:hover { color: var(--ink); }
+
+        .table-wrap thead th .sort-icon {
+            display: inline-block;
+            margin-left: 0.3rem;
+            opacity: 0.4;
+            font-size: 0.7rem;
+        }
+
+        .table-wrap thead th.sort-asc .sort-icon::after { content: '▲'; opacity: 1; }
+        .table-wrap thead th.sort-desc .sort-icon::after { content: '▼'; opacity: 1; }
+        .table-wrap thead th:not(.sort-asc):not(.sort-desc) .sort-icon::after { content: '⇅'; }
+
+        .table-wrap tbody tr.data-row {
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .table-wrap tbody tr.data-row:hover { background: var(--paper); }
+
+        .table-wrap tbody tr.data-row.expanded { background: var(--paper); }
+
+        .table-wrap tbody tr.detail-row td {
+            padding: 0;
+            border-bottom: 1px solid var(--warm);
+        }
+
+        .table-wrap tbody td {
+            padding: 0.8rem 1rem;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--warm);
+            vertical-align: middle;
+        }
+
+        .table-wrap tbody tr:last-child td { border-bottom: none; }
+
+        .table-wrap tbody tr.data-row:last-child td { border-bottom: none; }
+
+        .table-empty {
+            padding: 2.5rem 1rem;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        /* ── Detail panel ── */
+        .detail-panel {
+            display: none;
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid var(--warm);
+            background: #faf9f6;
+        }
+
+        .detail-panel.open { display: block; }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .detail-field label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-field p {
+            font-size: 0.88rem;
+            color: var(--ink);
+            word-break: break-word;
+        }
+
+        .detail-field p.empty { color: var(--muted); font-style: italic; }
+
+        .detail-receipt {
+            margin-top: 0.75rem;
+        }
+
+        .detail-receipt label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .detail-receipt iframe {
+            width: 100%;
+            height: 380px;
+            border: 1px solid var(--warm);
+            border-radius: 8px;
+            background: var(--paper);
+        }
+
+        .detail-receipt a {
+            font-size: 0.88rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .detail-receipt a:hover { text-decoration: underline; }
+
+        /* ── Status badge ── */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.78rem;
+            font-weight: 500;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        .status-badge.afventer {
+            background: #fef3e2;
+            color: #8a5a00;
+        }
+
+        .status-badge.godkendt {
+            background: #e6f0fa;
+            color: #1a4a7a;
+        }
+
+        .status-badge.udbetalt {
+            background: var(--success-bg);
+            color: var(--success-ink);
+        }
+
+        /* ── Action buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.4rem 0.85rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 500;
+            border-radius: 8px;
+            border: 1.5px solid transparent;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+        .btn-secondary {
+            background: var(--card-bg);
+            color: var(--ink);
+            border-color: var(--warm);
+        }
+
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+        .btn-success {
+            background: var(--success-bg);
+            color: var(--success-ink);
+            border-color: #b8d9b8;
+        }
+
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ── Export tab ── */
+        .export-card {
+            background: var(--card-bg);
+            border: 1px solid var(--warm);
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 480px;
+        }
+
+        .export-card h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.25rem;
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+        }
+
+        .export-card p {
+            color: var(--muted);
+            font-size: 0.88rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .export-card p strong {
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+        /* ── Loading skeleton ── */
+        .skeleton-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .skeleton-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .skeleton-block {
+            background: linear-gradient(90deg, var(--warm) 25%, #ede8e0 50%, var(--warm) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .skeleton-card { height: 90px; flex: 1; }
+        .skeleton-chart { height: 200px; flex: 1; }
+        .skeleton-table { height: 280px; flex: 1; }
+
+        /* ── Toast notification ── */
+        #toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--radius);
+            font-size: 0.88rem;
+            font-weight: 500;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(0.5rem);
+            transition: opacity 0.25s, transform 0.25s;
+            pointer-events: none;
+            max-width: 320px;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #toast.toast-ok {
+            background: var(--success-bg);
+            color: var(--success-ink);
+            border: 1px solid #b8d9b8;
+        }
+
+        #toast.toast-err {
+            background: #fde8e3;
+            color: #7a1a00;
+            border: 1px solid #f0b8a8;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .cards-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-grid { grid-template-columns: 1fr; }
+            .chart-card.full-width { grid-column: 1; }
+            .tab-btn { padding: 0.6rem 0.9rem; font-size: 0.82rem; }
+            .header-left h1 { font-size: 1.35rem; }
+            .table-wrap thead th:nth-child(4),
+            .table-wrap tbody td:nth-child(4) { display: none; }
+        }
+
+        @media (max-width: 480px) {
+            .cards-grid { grid-template-columns: 1fr 1fr; }
+            .filter-group { flex: 1 1 100%; }
+            .table-wrap thead th:nth-child(3),
+            .table-wrap tbody td:nth-child(3),
+            .table-wrap thead th:nth-child(6),
+            .table-wrap tbody td:nth-child(6) { display: none; }
+            .card-value { font-size: 1.35rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="page-wrap">
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <h1>{{ forening_name }}</h1>
+            <p>Dashboard — kvitteringsoversigt</p>
+        </div>
+        <div class="header-right">
+            <a href="/dashboard/logout">Log ud</a>
+        </div>
+    </header>
+
+    <!-- Filter bar -->
+    <div class="filter-bar" id="filterBar">
+        <div class="filter-group">
+            <label for="fUdvalg">Udvalg</label>
+            <select id="fUdvalg">
+                <option value="">Alle</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="fFra">Fra dato</label>
+            <input type="date" id="fFra">
+        </div>
+        <div class="filter-group">
+            <label for="fTil">Til dato</label>
+            <input type="date" id="fTil">
+        </div>
+        <div class="filter-group">
+            <label for="fKategori">Kategori</label>
+            <select id="fKategori">
+                <option value="">Alle</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="fType">Type</label>
+            <select id="fType">
+                <option value="">Alle</option>
+                <option value="udlæg">Udlæg</option>
+                <option value="foreningskort">Foreningskort</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="fStatus">Status</label>
+            <select id="fStatus">
+                <option value="">Alle</option>
+                <option value="afventer">Afventer</option>
+                <option value="godkendt">Godkendt</option>
+                <option value="udbetalt">Udbetalt</option>
+            </select>
+        </div>
+        <button class="filter-reset" id="btnNulstil">Nulstil</button>
+    </div>
+
+    <!-- Tab navigation -->
+    <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="oversigt">Oversigt</button>
+        <button class="tab-btn" data-tab="udgifter">Udgifter</button>
+        <button class="tab-btn" data-tab="eksport">Eksport</button>
+    </nav>
+
+    <!-- Loading state -->
+    <div id="loadingState">
+        <div class="skeleton-wrap">
+            <div class="skeleton-row">
+                <div class="skeleton-block skeleton-card"></div>
+                <div class="skeleton-block skeleton-card"></div>
+                <div class="skeleton-block skeleton-card"></div>
+                <div class="skeleton-block skeleton-card"></div>
+            </div>
+            <div class="skeleton-row">
+                <div class="skeleton-block skeleton-chart"></div>
+                <div class="skeleton-block skeleton-chart"></div>
+            </div>
+            <div class="skeleton-row">
+                <div class="skeleton-block skeleton-table"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab: Oversigt -->
+    <div id="tab-oversigt" class="tab-panel" style="display:none;">
+        <div class="cards-grid">
+            <div class="card">
+                <div class="card-label">Samlet forbrug</div>
+                <div class="card-value" id="cardTotal">—</div>
+                <div class="card-sub">DKK</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Antal kvitteringer</div>
+                <div class="card-value" id="cardCount">—</div>
+                <div class="card-sub">poster</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Afventer</div>
+                <div class="card-value" id="cardAfventer">—</div>
+                <div class="card-sub">ikke behandlet</div>
+            </div>
+            <div class="card">
+                <div class="card-label">Gns. per køb</div>
+                <div class="card-value" id="cardGns">—</div>
+                <div class="card-sub">DKK</div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">Forbrug per udvalg</div>
+                <div class="chart-container" style="height:220px;">
+                    <canvas id="chartUdvalg"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Kategorifordeling</div>
+                <div class="chart-container" style="height:220px;">
+                    <canvas id="chartKategori"></canvas>
+                </div>
+            </div>
+            <div class="chart-card full-width">
+                <div class="chart-title">Forbrug over tid</div>
+                <div class="chart-container" style="height:200px;">
+                    <canvas id="chartTid"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab: Udgifter -->
+    <div id="tab-udgifter" class="tab-panel" style="display:none;">
+        <div class="table-wrap">
+            <table id="udgifterTable">
+                <thead>
+                    <tr>
+                        <th data-col="Dato">Dato<span class="sort-icon"></span></th>
+                        <th data-col="Navn">Navn<span class="sort-icon"></span></th>
+                        <th data-col="Udvalg">Udvalg<span class="sort-icon"></span></th>
+                        <th data-col="Butik">Butik<span class="sort-icon"></span></th>
+                        <th data-col="Beløb" style="text-align:right;">Beløb<span class="sort-icon"></span></th>
+                        <th data-col="Kategori">Kategori<span class="sort-icon"></span></th>
+                        <th data-col="Status">Status<span class="sort-icon"></span></th>
+                        <th style="cursor:default;">Handlinger</th>
+                    </tr>
+                </thead>
+                <tbody id="udgifterBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tab: Eksport -->
+    <div id="tab-eksport" class="tab-panel" style="display:none;">
+        <div class="export-card">
+            <h2>Download data</h2>
+            <p>
+                Eksporter de aktuelt filtrerede kvitteringer som en CSV-fil.<br>
+                <strong id="exportCount">0 poster</strong> vil blive inkluderet.
+            </p>
+            <button class="btn btn-primary" id="btnDownloadCSV">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink:0"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/></svg>
+                Download CSV
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+(function () {
+    'use strict';
+
+    // ── Jinja2 constants injected server-side ──
+    const CATEGORIES = {{ categories_json | safe }};
+    const UDVALG = {{ udvalg_json | safe }};
+
+    // ── Chart color palette (derived from design system) ──
+    const PALETTE = [
+        '#c45d3e', // accent / rust
+        '#7a9ab5', // muted blue
+        '#6aaa7a', // muted green
+        '#c4a03e', // muted gold
+        '#9b6fc4', // muted purple
+        '#c46a6a', // muted rose
+        '#5aaa9a', // muted teal
+        '#c48a5e', // muted terra
+        '#6a7ac4', // muted indigo
+        '#a4c45e', // muted lime
+    ];
+
+    // ── State ──
+    let allRows = [];
+    let filteredRows = [];
+    let sortCol = 'Dato';
+    let sortDir = 'desc';
+    let charts = {};
+
+    // ── Populate filter dropdowns ──
+    function initDropdowns() {
+        const udvalg = document.getElementById('fUdvalg');
+        UDVALG.forEach(u => {
+            const o = document.createElement('option');
+            o.value = u;
+            o.textContent = u;
+            udvalg.appendChild(o);
+        });
+
+        const kat = document.getElementById('fKategori');
+        CATEGORIES.forEach(c => {
+            const o = document.createElement('option');
+            o.value = c;
+            o.textContent = c;
+            kat.appendChild(o);
+        });
+    }
+
+    // ── Filter logic ──
+    function applyFilters() {
+        const fUdvalg = document.getElementById('fUdvalg').value.trim().toLowerCase();
+        const fFra = document.getElementById('fFra').value;
+        const fTil = document.getElementById('fTil').value;
+        const fKategori = document.getElementById('fKategori').value.trim().toLowerCase();
+        const fType = document.getElementById('fType').value.trim().toLowerCase();
+        const fStatus = document.getElementById('fStatus').value.trim().toLowerCase();
+
+        filteredRows = allRows.filter(row => {
+            if (fUdvalg && (row['Udvalg'] || '').toLowerCase() !== fUdvalg) return false;
+            if (fFra && row['Dato'] && row['Dato'] < fFra) return false;
+            if (fTil && row['Dato'] && row['Dato'] > fTil) return false;
+            if (fKategori && (row['Kategori'] || '').toLowerCase() !== fKategori) return false;
+            if (fType) {
+                const t = (row['Type'] || '').toLowerCase();
+                if (!t.includes(fType)) return false;
+            }
+            if (fStatus) {
+                const s = (row['Status'] || '').toLowerCase().trim();
+                if (fStatus === 'afventer' && s !== '' && s !== 'afventer') return false;
+                if (fStatus === 'afventer' && (s === 'godkendt' || s === 'udbetalt')) return false;
+                if (fStatus === 'godkendt' && s !== 'godkendt') return false;
+                if (fStatus === 'udbetalt' && s !== 'udbetalt') return false;
+            }
+            return true;
+        });
+
+        renderAll();
+    }
+
+    // ── Helpers ──
+    function parseAmount(val) {
+        if (val === null || val === undefined || val === '') return 0;
+        const n = parseFloat(String(val).replace(',', '.'));
+        return isNaN(n) ? 0 : n;
+    }
+
+    function fmtDKK(n) {
+        return n.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function fmtDKKShort(n) {
+        if (n >= 1000) {
+            return n.toLocaleString('da-DK', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+        return n.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function todayISO() {
+        return new Date().toISOString().slice(0, 10);
+    }
+
+    function statusNormalized(row) {
+        return (row['Status'] || '').trim().toLowerCase();
+    }
+
+    function isAfventer(row) {
+        const s = statusNormalized(row);
+        return s === '' || s === 'afventer';
+    }
+
+    // ── Render everything ──
+    function renderAll() {
+        renderCards();
+        renderCharts();
+        renderTable();
+        renderExport();
+    }
+
+    // ── Summary cards ──
+    function renderCards() {
+        const total = filteredRows.reduce((s, r) => s + parseAmount(r['Beløb']), 0);
+        const count = filteredRows.length;
+        const afventer = filteredRows.filter(r => isAfventer(r)).length;
+        const gns = count > 0 ? total / count : 0;
+
+        document.getElementById('cardTotal').textContent = fmtDKKShort(total);
+        document.getElementById('cardCount').textContent = count.toLocaleString('da-DK');
+        document.getElementById('cardAfventer').textContent = afventer.toLocaleString('da-DK');
+        document.getElementById('cardGns').textContent = fmtDKKShort(gns);
+    }
+
+    // ── Charts ──
+    function destroyChart(id) {
+        if (charts[id]) {
+            charts[id].destroy();
+            delete charts[id];
+        }
+    }
+
+    function renderCharts() {
+        renderChartUdvalg();
+        renderChartKategori();
+        renderChartTid();
+    }
+
+    function renderChartUdvalg() {
+        destroyChart('udvalg');
+        const map = {};
+        filteredRows.forEach(r => {
+            const k = r['Udvalg'] || 'Ukendt';
+            map[k] = (map[k] || 0) + parseAmount(r['Beløb']);
+        });
+        const labels = Object.keys(map).sort((a, b) => map[b] - map[a]);
+        const data = labels.map(k => map[k]);
+        const colors = labels.map((_, i) => PALETTE[i % PALETTE.length]);
+
+        const ctx = document.getElementById('chartUdvalg').getContext('2d');
+        charts['udvalg'] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    data,
+                    backgroundColor: colors,
+                    borderRadius: 5,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ' ' + fmtDKK(ctx.parsed.x) + ' kr.'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: '#e8e3d9' },
+                        ticks: {
+                            font: { family: 'DM Sans', size: 11 },
+                            color: '#8a8578',
+                            callback: v => fmtDKKShort(v)
+                        }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: {
+                            font: { family: 'DM Sans', size: 11 },
+                            color: '#1a1a18'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderChartKategori() {
+        destroyChart('kategori');
+        const map = {};
+        filteredRows.forEach(r => {
+            const k = r['Kategori'] || 'Ukendt';
+            map[k] = (map[k] || 0) + parseAmount(r['Beløb']);
+        });
+        const labels = Object.keys(map).sort((a, b) => map[b] - map[a]);
+        const data = labels.map(k => map[k]);
+        const colors = labels.map((_, i) => PALETTE[i % PALETTE.length]);
+
+        const ctx = document.getElementById('chartKategori').getContext('2d');
+        charts['kategori'] = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{
+                    data,
+                    backgroundColor: colors,
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverOffset: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: { family: 'DM Sans', size: 11 },
+                            color: '#1a1a18',
+                            padding: 12,
+                            boxWidth: 12,
+                            boxHeight: 12,
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ' ' + fmtDKK(ctx.parsed) + ' kr.'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderChartTid() {
+        destroyChart('tid');
+        const map = {};
+        filteredRows.forEach(r => {
+            const d = r['Dato'];
+            if (!d) return;
+            const month = d.slice(0, 7); // YYYY-MM
+            map[month] = (map[month] || 0) + parseAmount(r['Beløb']);
+        });
+        const labels = Object.keys(map).sort();
+        const data = labels.map(k => map[k]);
+
+        const labelsDa = labels.map(m => {
+            const [y, mo] = m.split('-');
+            const months = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+            return months[parseInt(mo, 10) - 1] + ' ' + y;
+        });
+
+        const ctx = document.getElementById('chartTid').getContext('2d');
+        charts['tid'] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labelsDa,
+                datasets: [{
+                    data,
+                    borderColor: '#c45d3e',
+                    backgroundColor: 'rgba(196, 93, 62, 0.08)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: '#c45d3e',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ' ' + fmtDKK(ctx.parsed.y) + ' kr.'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: '#e8e3d9' },
+                        ticks: { font: { family: 'DM Sans', size: 11 }, color: '#8a8578' }
+                    },
+                    y: {
+                        grid: { color: '#e8e3d9' },
+                        ticks: {
+                            font: { family: 'DM Sans', size: 11 },
+                            color: '#8a8578',
+                            callback: v => fmtDKKShort(v)
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // ── Table ──
+    function sortedRows() {
+        return [...filteredRows].sort((a, b) => {
+            let av = a[sortCol] ?? '';
+            let bv = b[sortCol] ?? '';
+
+            if (sortCol === 'Beløb') {
+                av = parseAmount(av);
+                bv = parseAmount(bv);
+                return sortDir === 'asc' ? av - bv : bv - av;
+            }
+
+            av = String(av).toLowerCase();
+            bv = String(bv).toLowerCase();
+            if (av < bv) return sortDir === 'asc' ? -1 : 1;
+            if (av > bv) return sortDir === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }
+
+    function statusBadgeHTML(row) {
+        const s = statusNormalized(row);
+        if (s === 'udbetalt') {
+            const d = row['Udbetalt dato'] ? ' · ' + row['Udbetalt dato'] : '';
+            return `<span class="status-badge udbetalt">&#10003; Udbetalt${d}</span>`;
+        }
+        if (s === 'godkendt') {
+            return `<span class="status-badge godkendt">Godkendt</span>`;
+        }
+        return `<span class="status-badge afventer">Afventer</span>`;
+    }
+
+    function actionBtnHTML(row) {
+        const s = statusNormalized(row);
+        const rowNum = row['_row'];
+        if (s === 'udbetalt') return '';
+        if (s === 'godkendt') {
+            return `<button class="btn btn-success" onclick="event.stopPropagation();markUdbetalt(${rowNum})">Marker udbetalt</button>`;
+        }
+        return `<button class="btn btn-primary" onclick="event.stopPropagation();godkend(${rowNum})">Godkend</button>`;
+    }
+
+    function escapeHTML(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function detailFieldHTML(label, value) {
+        const v = (value !== null && value !== undefined && String(value).trim() !== '')
+            ? `<p>${escapeHTML(value)}</p>`
+            : `<p class="empty">—</p>`;
+        return `<div class="detail-field"><label>${escapeHTML(label)}</label>${v}</div>`;
+    }
+
+    function receiptPreviewHTML(url) {
+        if (!url || url.trim() === '') return '';
+        const safe = escapeHTML(url);
+
+        // Convert Google Drive view links to embeddable preview links
+        let embedUrl = url;
+        const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (driveMatch) {
+            embedUrl = `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+        }
+
+        return `
+        <div class="detail-receipt">
+            <label>Kvittering</label>
+            <iframe src="${escapeHTML(embedUrl)}" allowfullscreen loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            <div style="margin-top:0.5rem;">
+                <a href="${safe}" target="_blank" rel="noopener">Åbn i nyt vindue &rarr;</a>
+            </div>
+        </div>`;
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('udgifterBody');
+        const rows = sortedRows();
+
+        // Update sort indicators
+        document.querySelectorAll('#udgifterTable thead th[data-col]').forEach(th => {
+            th.classList.remove('sort-asc', 'sort-desc');
+            if (th.dataset.col === sortCol) {
+                th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+            }
+        });
+
+        if (rows.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="table-empty">Ingen kvitteringer fundet</td></tr>`;
+            return;
+        }
+
+        const html = rows.map(row => {
+            const rowNum = row['_row'];
+            const beloeb = parseAmount(row['Beløb']);
+
+            const dataRow = `
+            <tr class="data-row" data-row="${rowNum}" onclick="toggleDetail(${rowNum})">
+                <td>${escapeHTML(row['Dato'] || '—')}</td>
+                <td>${escapeHTML(row['Navn'] || '—')}</td>
+                <td>${escapeHTML(row['Udvalg'] || '—')}</td>
+                <td>${escapeHTML(row['Butik'] || '—')}</td>
+                <td style="text-align:right;font-variant-numeric:tabular-nums;">${fmtDKK(beloeb)}</td>
+                <td>${escapeHTML(row['Kategori'] || '—')}</td>
+                <td>${statusBadgeHTML(row)}</td>
+                <td onclick="event.stopPropagation();">${actionBtnHTML(row)}</td>
+            </tr>`;
+
+            const detailRow = `
+            <tr class="detail-row" id="detail-${rowNum}">
+                <td colspan="8">
+                    <div class="detail-panel" id="panel-${rowNum}">
+                        <div class="detail-grid">
+                            ${detailFieldHTML('Beskrivelse', row['Beskrivelse'])}
+                            ${detailFieldHTML('Kommentar', row['Kommentar'])}
+                            ${detailFieldHTML('Type', row['Type'])}
+                            ${detailFieldHTML('Telefon', row['Telefon'])}
+                            ${detailFieldHTML('Reg.nr.', row['Reg.nr.'])}
+                            ${detailFieldHTML('Kontonr.', row['Kontonr.'])}
+                            ${detailFieldHTML('Indsendt', row['Indsendt'])}
+                            ${detailFieldHTML('Valuta', row['Valuta'])}
+                        </div>
+                        ${receiptPreviewHTML(row['Kvittering'])}
+                    </div>
+                </td>
+            </tr>`;
+
+            return dataRow + detailRow;
+        }).join('');
+
+        tbody.innerHTML = html;
+    }
+
+    // ── Toggle row detail ──
+    window.toggleDetail = function (rowNum) {
+        const panel = document.getElementById(`panel-${rowNum}`);
+        const dataRow = document.querySelector(`tr.data-row[data-row="${rowNum}"]`);
+        if (!panel) return;
+        const isOpen = panel.classList.toggle('open');
+        if (dataRow) dataRow.classList.toggle('expanded', isOpen);
+    };
+
+    // ── Export tab ──
+    function renderExport() {
+        const el = document.getElementById('exportCount');
+        if (el) {
+            const n = filteredRows.length;
+            el.textContent = n.toLocaleString('da-DK') + (n === 1 ? ' post' : ' poster');
+        }
+    }
+
+    function downloadCSV() {
+        if (filteredRows.length === 0) {
+            showToast('Ingen data at eksportere.', false);
+            return;
+        }
+
+        const cols = ['Dato', 'Indsendt', 'Navn', 'Type', 'Udvalg', 'Telefon', 'Reg.nr.', 'Kontonr.',
+            'Butik', 'Beskrivelse', 'Beløb', 'Valuta', 'Kategori', 'Kommentar', 'Status', 'Udbetalt dato'];
+
+        const escape = v => {
+            const s = v === null || v === undefined ? '' : String(v);
+            if (s.includes('"') || s.includes(',') || s.includes('\n')) return '"' + s.replace(/"/g, '""') + '"';
+            return s;
+        };
+
+        const lines = [
+            cols.map(escape).join(','),
+            ...filteredRows.map(row => cols.map(c => escape(row[c])).join(','))
+        ];
+
+        const bom = '\uFEFF';
+        const blob = new Blob([bom + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `kvitteringer_${todayISO()}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    // ── Status update ──
+    function findRowByNum(rowNum) {
+        return allRows.find(r => r['_row'] === rowNum);
+    }
+
+    async function updateStatus(rowNum, status, udbetaltDato) {
+        const btn = document.querySelector(`[onclick*="${rowNum}"]`);
+        if (btn) btn.disabled = true;
+
+        const payload = { row: rowNum, status };
+        if (udbetaltDato) payload.udbetalt_dato = udbetaltDato;
+
+        try {
+            const resp = await fetch('/dashboard/api/update-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+            const json = await resp.json();
+            if (json.error) throw new Error(json.error);
+
+            // Update local data
+            const row = findRowByNum(rowNum);
+            if (row) {
+                row['Status'] = status;
+                if (udbetaltDato) row['Udbetalt dato'] = udbetaltDato;
+            }
+
+            applyFilters();
+            showToast('Status opdateret.', true);
+        } catch (err) {
+            showToast('Fejl: ' + err.message, false);
+            if (btn) btn.disabled = false;
+        }
+    }
+
+    window.godkend = function (rowNum) {
+        updateStatus(rowNum, 'Godkendt', '');
+    };
+
+    window.markUdbetalt = function (rowNum) {
+        updateStatus(rowNum, 'Udbetalt', todayISO());
+    };
+
+    // ── Toast ──
+    let toastTimer = null;
+    function showToast(msg, ok) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.className = 'show ' + (ok ? 'toast-ok' : 'toast-err');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { el.className = ''; }, 3000);
+    }
+
+    // ── Tab switching ──
+    function initTabs() {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                const panel = document.getElementById('tab-' + tab);
+                if (panel) {
+                    panel.style.display = 'block';
+                    panel.classList.add('active');
+                }
+                // Hide others
+                document.querySelectorAll('.tab-panel:not(.active)').forEach(p => { p.style.display = 'none'; });
+            });
+        });
+    }
+
+    // ── Table sort headers ──
+    function initTableSort() {
+        document.querySelectorAll('#udgifterTable thead th[data-col]').forEach(th => {
+            th.addEventListener('click', () => {
+                const col = th.dataset.col;
+                if (sortCol === col) {
+                    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortCol = col;
+                    sortDir = 'asc';
+                }
+                renderTable();
+            });
+        });
+    }
+
+    // ── Filter listeners ──
+    function initFilters() {
+        ['fUdvalg', 'fFra', 'fTil', 'fKategori', 'fType', 'fStatus'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', applyFilters);
+        });
+
+        document.getElementById('btnNulstil').addEventListener('click', () => {
+            document.getElementById('fUdvalg').value = '';
+            document.getElementById('fFra').value = '';
+            document.getElementById('fTil').value = '';
+            document.getElementById('fKategori').value = '';
+            document.getElementById('fType').value = '';
+            document.getElementById('fStatus').value = '';
+            applyFilters();
+        });
+
+        document.getElementById('btnDownloadCSV').addEventListener('click', downloadCSV);
+    }
+
+    // ── Show tabs, hide loading ──
+    function revealDashboard() {
+        document.getElementById('loadingState').style.display = 'none';
+        const firstTab = document.getElementById('tab-oversigt');
+        if (firstTab) {
+            firstTab.style.display = 'block';
+            firstTab.classList.add('active');
+        }
+    }
+
+    // ── Fetch data ──
+    async function loadData() {
+        try {
+            const resp = await fetch('/dashboard/api/data');
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const json = await resp.json();
+
+            if (json.error) throw new Error(json.error);
+            if (!Array.isArray(json.rows)) throw new Error('Ugyldigt dataformat fra server.');
+
+            allRows = json.rows;
+            filteredRows = [...allRows];
+
+            revealDashboard();
+            renderAll();
+        } catch (err) {
+            document.getElementById('loadingState').innerHTML =
+                `<div style="padding:2rem;text-align:center;color:var(--accent);">
+                    <strong>Fejl ved hentning af data</strong><br>
+                    <span style="font-size:0.88rem;color:var(--muted);">${escapeHTML(err.message)}</span><br>
+                    <button class="btn btn-secondary" style="margin-top:1rem;" onclick="location.reload()">Prøv igen</button>
+                </div>`;
+        }
+    }
+
+    // ── Init ──
+    function init() {
+        initDropdowns();
+        initTabs();
+        initTableSort();
+        initFilters();
+        loadData();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+}());
+</script>
+</body>
+</html>

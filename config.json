@@ -1,12 +1,19 @@
 {
   "apps_script_url": "https://script.google.com/macros/s/AKfycbxK0p9EyYRG1c3oD5nk30JB3fXLjO4JpviA3RUDE3fvhcajEBScAx6nw0gplq1SYnPn/exec",
+  "udvalg": [
+    "Juniorudvalg",
+    "Søsterudvalg",
+    "Aktivitetsudvalg",
+    "Medieudvalg",
+    "Børneudvalg",
+    "Akademiudvalg",
+    "Andet"
+  ],
   "categories": [
     "Transport",
     "Forplejning",
     "Materialer",
     "Udstyr",
-    "Lokale",
-    "Porto",
     "Kontorartikler",
     "Aktiviteter",
     "Abonnementer",

@@ -537,6 +537,150 @@
             font-size: 0.8rem;
             margin-top: 0.35rem;
         }
+
+        /* ---- Review screen ---- */
+        .review {
+            display: none;
+        }
+
+        .review.visible { display: block; }
+
+        .review-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-bottom: 1rem;
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .review-back:hover { color: var(--accent); }
+
+        .review-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .review-header h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.35rem;
+            font-weight: 400;
+            margin-bottom: 0.25rem;
+        }
+
+        .review-header p {
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .review-card {
+            background: #fff;
+            border: 1.5px solid var(--warm);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .review-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--warm);
+        }
+
+        .review-card-filename {
+            font-size: 0.8rem;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+
+        .review-card-warn {
+            color: #b8860b;
+            font-size: 1rem;
+            cursor: help;
+            flex-shrink: 0;
+            margin-left: 0.5rem;
+        }
+
+        .review-card-remove {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.2rem 0.4rem;
+            margin-left: 0.5rem;
+            flex-shrink: 0;
+            line-height: 1;
+            border-radius: 4px;
+            transition: color 0.15s, background 0.15s;
+        }
+
+        .review-card-remove:hover {
+            color: #c0392b;
+            background: #fdecea;
+        }
+
+        .review-fields label {
+            font-size: 0.7rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .review-fields input,
+        .review-fields select {
+            width: 100%;
+            padding: 0.65rem 0.75rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            color: var(--ink);
+            background: #fff;
+            border: 1.5px solid var(--warm);
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .review-fields input:focus,
+        .review-fields select:focus {
+            border-color: var(--accent);
+        }
+
+        .review-field {
+            margin-bottom: 0.6rem;
+        }
+
+        .review-row {
+            display: flex;
+            gap: 0.6rem;
+        }
+
+        .review-row .review-field { flex: 1; }
+
+        .review-actions {
+            margin-top: 0.5rem;
+            padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+        }
+
+        .review-scan-error {
+            padding: 0.5rem 0.75rem;
+            background: #fce8e8;
+            color: #8b2020;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -564,6 +708,14 @@
                         <span>Foreningens kort</span>
                     </label>
                 </div>
+            </div>
+
+            <div class="field">
+                <label for="udvalg">Udvalg</label>
+                <select id="udvalg" name="udvalg" required>
+                    <option value="" disabled selected>Vælg udvalg</option>
+                </select>
+                <input type="text" id="udvalg-andet" placeholder="Angiv udvalg" style="display:none; margin-top:0.5rem;">
             </div>
 
             <div class="refund-fields" id="refund-fields">
@@ -634,6 +786,19 @@
             <div class="ocr-results" id="ocr-results"></div>
             <a href="/" class="again-btn">Indsend flere</a>
         </div>
+
+        <div class="review" id="review">
+            <button type="button" class="review-back" id="review-back">&larr; Tilbage</button>
+            <div class="review-header">
+                <h2>Bekræft oplysninger</h2>
+                <p>Gennemgå og ret eventuelle fejl</p>
+            </div>
+            <div id="review-cards"></div>
+            <div class="review-actions">
+                <button type="button" class="submit-btn" id="confirm-btn">Godkend og send</button>
+                <div class="progress-text" id="confirm-progress"></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -656,10 +821,52 @@
         const phoneInput = document.getElementById('phone');
         const regInput = document.getElementById('reg_nr');
         const kontoInput = document.getElementById('konto_nr');
+        const reviewDiv = document.getElementById('review');
+        const reviewCards = document.getElementById('review-cards');
+        const confirmBtn = document.getElementById('confirm-btn');
+        const confirmProgress = document.getElementById('confirm-progress');
+        const reviewBack = document.getElementById('review-back');
+
+        const CATEGORIES = {{ categories_json | safe }};
+        const UDVALG = {{ udvalg_json | safe }};
+
+        // Populate udvalg dropdown
+        const udvalgSelect = document.getElementById('udvalg');
+        const udvalgAndet = document.getElementById('udvalg-andet');
+        UDVALG.forEach(u => {
+            const opt = document.createElement('option');
+            opt.value = u;
+            opt.textContent = u;
+            udvalgSelect.appendChild(opt);
+        });
+        udvalgSelect.addEventListener('change', () => {
+            const isAndet = udvalgSelect.value === 'Andet';
+            udvalgAndet.style.display = isAndet ? '' : 'none';
+            udvalgAndet.required = isAndet;
+            if (!isAndet) udvalgAndet.value = '';
+        });
 
         let selectedFiles = [];
+        let scanResults = [];
+        let formMeta = {};
+        let isDirty = false;
+
         const ALLOWED_TYPES = ['image/', 'application/pdf'];
         const ALLOWED_EXT = ['.heic', '.heif'];
+
+        // --- Restore name from localStorage ---
+        const savedName = localStorage.getItem('receipt_name');
+        if (savedName) document.getElementById('name').value = savedName;
+
+        // --- Track dirty state ---
+        form.addEventListener('input', () => { isDirty = true; });
+
+        // --- Warn before leaving with unsaved data ---
+        window.addEventListener('beforeunload', (e) => {
+            if (isDirty || selectedFiles.length > 0) {
+                e.preventDefault();
+            }
+        });
 
         function isAllowedFile(f) {
             if (ALLOWED_TYPES.some(t => f.type.startsWith(t))) return true;
@@ -863,7 +1070,7 @@
             if (files.length) addFiles(files);
         });
 
-        // --- Render OCR results ---
+        // --- Render OCR results on success screen ---
         function renderOcrResults(receipts) {
             ocrResults.innerHTML = '';
             if (!receipts.length) return;
@@ -887,7 +1094,31 @@
             }
         }
 
-        // --- Submit: compress all files, send as single batch, stream results ---
+        // --- NDJSON stream reader helper ---
+        async function readNDJSON(response, onLine) {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+                    try { onLine(JSON.parse(line)); }
+                    catch (_) { onLine({ _parseError: true }); }
+                }
+            }
+        }
+
+        // --- HTML-safe attribute escaping ---
+        function esc(s) {
+            return String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        }
+
+        // --- Phase 1: Submit form → scan OCR ---
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorMsg.classList.remove('visible');
@@ -898,113 +1129,292 @@
                 return;
             }
 
+            // Save form metadata for the confirm step
+            formMeta = {
+                name: document.getElementById('name').value.trim(),
+                comment: document.getElementById('comment').value.trim(),
+                payment_type: document.querySelector('input[name="payment_type"]:checked')?.value || '',
+                phone: phoneInput.value.trim(),
+                reg_nr: regInput.value.trim(),
+                konto_nr: kontoInput.value.trim(),
+                udvalg: udvalgSelect.value === 'Andet' && udvalgAndet.value.trim()
+                    ? 'Andet: ' + udvalgAndet.value.trim()
+                    : udvalgSelect.value,
+            };
+
+            // Remember name for next visit
+            localStorage.setItem('receipt_name', formMeta.name);
+
             submitBtn.classList.add('loading');
             submitBtn.disabled = true;
 
             const total = selectedFiles.length;
-            let completed = 0;
-            let errors = [];
-            let receipts = [];
-
             progressText.textContent = total > 1
                 ? `Komprimerer ${total} kvitteringer...`
                 : 'Komprimerer kvittering...';
             progressText.classList.add('visible');
 
-            // Compress all files first
+            // Compress all files and build FormData
             const formData = new FormData();
-            formData.append('name', document.getElementById('name').value);
-            formData.append('payment_type', document.querySelector('input[name="payment_type"]:checked')?.value || '');
-            formData.append('phone', phoneInput.value);
-            formData.append('reg_nr', regInput.value);
-            formData.append('konto_nr', kontoInput.value);
-            formData.append('comment', document.getElementById('comment').value);
-
+            formData.append('name', formMeta.name);
             for (let i = 0; i < total; i++) {
-                const compressed = await compressImage(selectedFiles[i]);
-                formData.append('receipt', compressed);
+                formData.append('receipt', await compressImage(selectedFiles[i]));
             }
 
-            if (total > 1) {
-                const est = Math.ceil(total * 8 / 60);
-                progressText.textContent = `Behandler kvittering 1 af ${total} (ca. ${est} min)...`;
-            } else {
-                progressText.textContent = 'Behandler kvittering...';
-            }
+            progressText.textContent = total > 1
+                ? `Scanner kvittering 1 af ${total}...`
+                : 'Scanner kvittering...';
+
+            scanResults = [];
+            let scanErrors = [];
 
             try {
-                const res = await fetch('/upload-batch', { method: 'POST', body: formData });
-
+                const res = await fetch('/scan', { method: 'POST', body: formData });
                 if (!res.ok) {
-                    const data = await res.json();
-                    errors.push(data.error || 'Ukendt fejl');
+                    try {
+                        const data = await res.json();
+                        scanErrors.push(data.error || 'Ukendt fejl');
+                    } catch { scanErrors.push('Ukendt serverfejl'); }
                 } else {
-                    // Read NDJSON stream line by line
-                    const reader = res.body.getReader();
-                    const decoder = new TextDecoder();
-                    let buffer = '';
-
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-
-                        buffer += decoder.decode(value, { stream: true });
-                        const lines = buffer.split('\n');
-                        buffer = lines.pop(); // keep incomplete line in buffer
-
-                        for (const line of lines) {
-                            if (!line.trim()) continue;
-                            try {
-                                const result = JSON.parse(line);
-                                if (result.step) {
-                                    progressText.textContent = result.message;
-                                } else if (result.status === 'ok') {
-                                    completed++;
-                                    if (result.receipt) receipts.push(result.receipt);
-                                } else {
-                                    const fname = result.filename || `Kvittering ${(result.index || 0) + 1}`;
-                                    errors.push(`${fname}: ${result.error || 'Ukendt fejl'}`);
-                                }
-                                if (result.status && total > 1) {
-                                    const done = result.index + 1;
-                                    if (done < total) {
-                                        progressText.textContent = `Behandler kvittering ${done + 1} af ${total}...`;
-                                    } else {
-                                        progressText.textContent = 'Færdig!';
-                                    }
-                                }
-                            } catch (_) {
-                                errors.push('Kunne ikke læse svar fra server');
-                            }
+                    await readNDJSON(res, (r) => {
+                        if (r._parseError) {
+                            scanErrors.push('Kunne ikke læse svar fra server');
+                        } else if (r.step) {
+                            progressText.textContent = r.message;
+                        } else if (r.status === 'ok') {
+                            scanResults.push({
+                                temp_id: r.temp_id,
+                                receipt: r.receipt,
+                                filename: r.filename,
+                            });
+                        } else {
+                            const fname = r.filename || `Kvittering ${(r.index || 0) + 1}`;
+                            scanErrors.push(`${fname}: ${r.error || 'Ukendt fejl'}`);
                         }
-                    }
+                    });
                 }
             } catch (err) {
-                errors.push('Kunne ikke forbinde til serveren');
+                scanErrors.push('Kunne ikke forbinde til serveren');
             }
 
             submitBtn.classList.remove('loading');
             submitBtn.disabled = false;
             progressText.classList.remove('visible');
 
+            if (scanResults.length > 0) {
+                showReview(scanErrors);
+            } else {
+                errorMsg.textContent = scanErrors[0] || 'Noget gik galt. Prøv igen.';
+                errorMsg.classList.add('visible');
+            }
+        });
+
+        // --- Phase 2: Show review screen ---
+        function showReview(scanErrors) {
+            form.style.display = 'none';
+            submitBar.style.display = 'none';
+
+            reviewCards.innerHTML = '';
+
+            // Show scan errors (files that failed OCR)
+            if (scanErrors.length > 0) {
+                for (const err of scanErrors) {
+                    const errEl = document.createElement('div');
+                    errEl.className = 'review-scan-error';
+                    errEl.textContent = err;
+                    reviewCards.appendChild(errEl);
+                }
+            }
+
+            // Build a review card for each successful scan
+            for (let i = 0; i < scanResults.length; i++) {
+                const { receipt, filename } = scanResults[i];
+                const card = document.createElement('div');
+                card.className = 'review-card';
+                card.dataset.index = i;
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'review-card-header';
+                const fnameEl = document.createElement('span');
+                fnameEl.className = 'review-card-filename';
+                fnameEl.textContent = filename;
+                header.appendChild(fnameEl);
+
+                if (receipt.confidence_note) {
+                    const warn = document.createElement('span');
+                    warn.className = 'review-card-warn';
+                    warn.textContent = '\u26A0';
+                    warn.title = receipt.confidence_note;
+                    header.appendChild(warn);
+                }
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'review-card-remove';
+                removeBtn.title = 'Fjern kvittering';
+                removeBtn.textContent = '\u2715';
+                removeBtn.addEventListener('click', () => {
+                    const idx = parseInt(card.dataset.index, 10);
+                    scanResults.splice(idx, 1);
+                    card.remove();
+                    // Re-index remaining cards
+                    reviewCards.querySelectorAll('.review-card').forEach((c, j) => {
+                        c.dataset.index = j;
+                    });
+                    // If none left, go back to form
+                    if (scanResults.length === 0) {
+                        reviewDiv.classList.remove('visible');
+                        form.style.display = '';
+                        submitBar.style.display = '';
+                    }
+                });
+                header.appendChild(removeBtn);
+
+                card.appendChild(header);
+
+                // Editable fields
+                const fields = document.createElement('div');
+                fields.className = 'review-fields';
+                fields.innerHTML = `
+                    <div class="review-row">
+                        <div class="review-field" style="flex:1">
+                            <label>Butik</label>
+                            <input type="text" data-key="vendor" value="${esc(receipt.vendor)}">
+                        </div>
+                        <div class="review-field" style="flex:0 0 35%">
+                            <label>Beløb</label>
+                            <input type="number" data-key="amount" value="${esc(receipt.amount)}" step="0.01" inputmode="decimal">
+                        </div>
+                    </div>
+                    <div class="review-row">
+                        <div class="review-field">
+                            <label>Dato</label>
+                            <input type="date" data-key="date" value="${esc(receipt.date)}">
+                        </div>
+                        <div class="review-field">
+                            <label>Kategori</label>
+                            <select data-key="category">
+                                ${CATEGORIES.map(c => `<option value="${esc(c)}" ${c === receipt.category ? 'selected' : ''}>${esc(c)}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="review-field">
+                        <label>Beskrivelse</label>
+                        <input type="text" data-key="description" value="${esc(receipt.description)}">
+                    </div>
+                `;
+                card.appendChild(fields);
+                reviewCards.appendChild(card);
+            }
+
+            reviewDiv.classList.add('visible');
+        }
+
+        // --- Back from review to form ---
+        reviewBack.addEventListener('click', () => {
+            reviewDiv.classList.remove('visible');
+            form.style.display = '';
+            submitBar.style.display = '';
+        });
+
+        // --- Phase 3: Confirm → send to Google Sheets ---
+        confirmBtn.addEventListener('click', async () => {
+            confirmBtn.classList.add('loading');
+            confirmBtn.disabled = true;
+
+            // Remove any previous confirm error
+            const prevErr = reviewDiv.querySelector('.confirm-error');
+            if (prevErr) prevErr.remove();
+
+            const total = scanResults.length;
+            confirmProgress.textContent = total > 1
+                ? `Sender kvittering 1 af ${total}...`
+                : 'Sender til Google Sheets...';
+            confirmProgress.classList.add('visible');
+
+            // Collect edited data from review cards
+            const receipts = scanResults.map((sr, i) => {
+                const card = reviewCards.querySelector(`.review-card[data-index="${i}"]`);
+                const edited = { ...sr.receipt };
+                if (card) {
+                    card.querySelectorAll('[data-key]').forEach(el => {
+                        const key = el.dataset.key;
+                        let val = el.tagName === 'SELECT' ? el.value : el.value;
+                        if (key === 'amount') val = val ? parseFloat(val) : null;
+                        edited[key] = val;
+                    });
+                }
+                return { temp_id: sr.temp_id, receipt: edited };
+            });
+
+            // Keep a copy for the success screen
+            const editedReceipts = receipts.map(r => r.receipt);
+
+            const payload = { ...formMeta, receipts };
+
+            let completed = 0;
+            let errors = [];
+
+            try {
+                const res = await fetch('/confirm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!res.ok) {
+                    try {
+                        const data = await res.json();
+                        errors.push(data.error || 'Ukendt fejl');
+                    } catch { errors.push('Ukendt serverfejl'); }
+                } else {
+                    await readNDJSON(res, (r) => {
+                        if (r._parseError) {
+                            errors.push('Kunne ikke læse svar fra server');
+                        } else if (r.step) {
+                            confirmProgress.textContent = r.message;
+                        } else if (r.status === 'ok') {
+                            completed++;
+                            if (total > 1 && r.index + 1 < total) {
+                                confirmProgress.textContent = `Sender kvittering ${r.index + 2} af ${total}...`;
+                            }
+                        } else {
+                            errors.push(r.error || 'Ukendt fejl');
+                        }
+                    });
+                }
+            } catch (err) {
+                errors.push('Kunne ikke forbinde til serveren');
+            }
+
+            confirmBtn.classList.remove('loading');
+            confirmBtn.disabled = false;
+            confirmProgress.classList.remove('visible');
+
             if (completed > 0) {
+                isDirty = false;
                 form.reset();
                 refundFields.classList.remove('visible');
-                form.style.display = 'none';
-                submitBar.style.display = 'none';
-                if (completed === 1 && errors.length === 0) {
-                    successText.textContent = 'Din kvittering er modtaget og bogført.';
-                } else if (errors.length === 0) {
-                    successText.textContent = `Alle ${completed} kvitteringer er modtaget!`;
+                reviewDiv.classList.remove('visible');
+
+                if (completed === total && errors.length === 0) {
+                    successText.textContent = total === 1
+                        ? 'Din kvittering er modtaget og bogført.'
+                        : `Alle ${completed} kvitteringer er modtaget!`;
                 } else {
-                    successText.textContent = `${completed} af ${total} kvitteringer modtaget. ${errors.length} fejlede.`;
+                    successText.textContent = `${completed} af ${total} kvitteringer sendt. ${errors.length} fejlede.`;
                 }
-                renderOcrResults(receipts);
+
+                renderOcrResults(editedReceipts.slice(0, completed));
                 successDiv.classList.add('visible');
                 selectedFiles = [];
+                scanResults = [];
             } else {
-                errorMsg.textContent = errors[0] || 'Noget gik galt. Prøv igen.';
-                errorMsg.classList.add('visible');
+                const errEl = document.createElement('div');
+                errEl.className = 'confirm-error error-msg visible';
+                errEl.textContent = errors[0] || 'Noget gik galt. Prøv igen.';
+                confirmBtn.parentNode.insertBefore(errEl, confirmBtn);
             }
         });
     </script>

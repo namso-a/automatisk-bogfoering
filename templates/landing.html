@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M7 3 L25 3 L25 25 L23 27 L21 25 L19 27 L17 25 L15 27 L13 25 L11 27 L9 25 L7 27 Z' fill='%231a1612'/><rect x='10' y='8' width='12' height='1.8' fill='%23fafaf7'/><rect x='10' y='12' width='8' height='1.8' fill='%23fafaf7'/><rect x='10' y='16' width='12' height='1.8' fill='%23fafaf7'/><rect x='10' y='20' width='12' height='2.6' fill='%239a6f28'/></svg>">
+    <title>Kvitly · Digital kasserermappe til foreningen</title>
+    <meta name="description" content="Frivillige uploader kvitteringer. AI læser dem automatisk. Kassereren får overblik per udvalg.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fafaf7;
+            --bg-soft: #f1eee5;
+            --bg-card: #ffffff;
+            --ink: #1a1612;
+            --ink-dim: #3d352e;
+            --muted: #8a817a;
+            --border: #e8e4d8;
+            --border-strong: #d6d0c0;
+            --accent: #9a6f28;
+            --accent-hover: #7d5a20;
+            --accent-bright: #b88838;
+            --accent-soft: rgba(154, 111, 40, 0.08);
+            --radius: 4px;
+            --radius-lg: 6px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            line-height: 1.55;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+
+        /* Subtle paper grain */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.35;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.4  0 0 0 0 0.35  0 0 0 0 0.25  0 0 0 0.03 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+        }
+
+        .wrap {
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 0 1.75rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Nav */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(250, 250, 247, 0.82);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+        }
+        .nav-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 0 1.75rem;
+        }
+        .logo {
+            font-family: 'Fraunces', serif;
+            font-weight: 400;
+            font-size: 1.65rem;
+            letter-spacing: -0.02em;
+            color: var(--ink);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+        }
+        .logo-mark {
+            width: 22px;
+            height: 28px;
+            flex-shrink: 0;
+            display: block;
+        }
+        .logo-mark .body { fill: var(--ink); }
+        .logo-mark .line { fill: var(--bg); }
+        .logo-mark .total { fill: var(--accent); }
+        footer .logo-mark {
+            width: 24px;
+            height: 30px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 0.7rem 1.3rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: var(--radius);
+            text-decoration: none;
+            transition: all 0.18s ease;
+            border: 1px solid transparent;
+            cursor: pointer;
+            text-align: center;
+            letter-spacing: 0.01em;
+        }
+        .btn-primary {
+            background: var(--ink);
+            color: var(--bg);
+            font-weight: 500;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: transparent;
+            color: var(--ink);
+            border-color: var(--border-strong);
+        }
+        .btn-secondary:hover {
+            border-color: var(--ink);
+            background: var(--bg-soft);
+        }
+        .btn-large {
+            padding: 1rem 1.9rem;
+            font-size: 0.95rem;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 6rem 0 5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 700px;
+            height: 450px;
+            background: radial-gradient(ellipse at top, var(--accent-soft) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .eyebrow {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            padding: 0.3rem 0.9rem;
+            border: 1px solid var(--border-strong);
+            border-radius: 100px;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 2;
+            background: var(--bg-card);
+        }
+        h1 {
+            font-family: 'Fraunces', serif;
+            font-weight: 300;
+            font-size: clamp(2.8rem, 6.5vw, 5rem);
+            line-height: 1.02;
+            letter-spacing: -0.035em;
+            margin-bottom: 1.75rem;
+            max-width: 18ch;
+            margin-left: auto;
+            margin-right: auto;
+            font-variation-settings: "opsz" 144;
+            position: relative;
+            z-index: 2;
+        }
+        h1 em {
+            font-style: italic;
+            font-weight: 400;
+            color: var(--accent);
+        }
+        .hero .sub {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.125rem;
+            color: var(--ink-dim);
+            max-width: 50ch;
+            margin: 0 auto 2.5rem;
+            line-height: 1.55;
+            font-weight: 400;
+            position: relative;
+            z-index: 2;
+        }
+        .hero-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 4.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Video */
+        .video-wrap {
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid var(--border-strong);
+            background: var(--bg-card);
+            box-shadow: 0 30px 80px -30px rgba(26, 22, 18, 0.2),
+                        0 0 0 1px var(--accent-soft);
+        }
+        .video-ratio {
+            position: relative;
+            padding-bottom: 62.5%;
+            height: 0;
+        }
+        .video-ratio iframe,
+        .video-placeholder {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+        .video-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-soft) 100%);
+            color: var(--muted);
+            text-align: center;
+            padding: 2rem;
+            gap: 1rem;
+        }
+        .video-placeholder svg {
+            width: 64px;
+            height: 64px;
+            color: var(--accent);
+            opacity: 0.8;
+        }
+        .video-placeholder .label {
+            font-family: 'Fraunces', serif;
+            font-weight: 400;
+            color: var(--ink);
+            font-size: 1.2rem;
+            letter-spacing: -0.01em;
+        }
+        .video-placeholder .note {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        /* Proof strip */
+        .proof-strip {
+            max-width: 900px;
+            margin: 3rem auto 0;
+            padding: 2rem 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            z-index: 2;
+        }
+        .proof {
+            text-align: center;
+        }
+        .proof-num {
+            font-family: 'Fraunces', serif;
+            font-weight: 400;
+            font-size: 2rem;
+            color: var(--ink);
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            font-variation-settings: "opsz" 144;
+        }
+        .proof-num em {
+            font-style: italic;
+            color: var(--accent);
+            font-weight: 400;
+        }
+        .proof-label {
+            margin-top: 0.3rem;
+            font-size: 0.85rem;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+        .proof-note {
+            text-align: center;
+            margin-top: 1rem;
+            font-family: 'Fraunces', serif;
+            font-style: italic;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        /* Section base */
+        section {
+            padding: 5.5rem 0;
+            border-top: 1px solid var(--border);
+            position: relative;
+        }
+        .section-soft {
+            background: var(--bg-soft);
+        }
+        .section-head {
+            text-align: center;
+            max-width: 48ch;
+            margin: 0 auto 4rem;
+        }
+        .section-head h2 {
+            font-family: 'Fraunces', serif;
+            font-weight: 300;
+            font-size: clamp(2.1rem, 4.5vw, 3.2rem);
+            line-height: 1.1;
+            letter-spacing: -0.025em;
+            margin-bottom: 1rem;
+            font-variation-settings: "opsz" 144;
+        }
+        .section-head h2 em {
+            font-style: italic;
+            font-weight: 400;
+            color: var(--accent);
+        }
+        .section-head p {
+            color: var(--ink-dim);
+            font-size: 1.05rem;
+        }
+
+        /* Cards grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 2.25rem 2rem;
+            transition: border-color 0.18s ease, transform 0.18s ease;
+        }
+        .card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+        .card-num {
+            font-family: 'Fraunces', serif;
+            font-style: italic;
+            font-weight: 400;
+            font-size: 0.9rem;
+            color: var(--accent);
+            margin-bottom: 1.25rem;
+            letter-spacing: 0.05em;
+        }
+        .card h3 {
+            font-family: 'Fraunces', serif;
+            font-weight: 400;
+            font-size: 1.5rem;
+            letter-spacing: -0.015em;
+            margin-bottom: 0.7rem;
+        }
+        .card p {
+            color: var(--ink-dim);
+            font-size: 0.95rem;
+            line-height: 1.55;
+        }
+
+        /* Bullets */
+        .bullets {
+            max-width: 700px;
+            margin: 0 auto;
+            list-style: none;
+        }
+        .bullets li {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .bullets li:last-child {
+            border-bottom: 0;
+        }
+        .bullets .marker {
+            flex: 0 0 auto;
+            font-family: 'Fraunces', serif;
+            font-style: italic;
+            font-weight: 400;
+            font-size: 1rem;
+            color: var(--accent);
+            margin-top: 3px;
+            letter-spacing: 0.04em;
+            min-width: 24px;
+        }
+        .bullets strong {
+            display: block;
+            font-family: 'Fraunces', serif;
+            font-weight: 400;
+            font-size: 1.35rem;
+            margin-bottom: 0.4rem;
+            letter-spacing: -0.015em;
+            color: var(--ink);
+        }
+        .bullets span {
+            color: var(--ink-dim);
+            font-size: 0.98rem;
+            line-height: 1.55;
+        }
+        .kicker {
+            text-align: center;
+            max-width: 54ch;
+            margin: 3rem auto 0;
+            font-family: 'Fraunces', serif;
+            font-style: italic;
+            font-weight: 300;
+            color: var(--accent);
+            font-size: 1.25rem;
+            line-height: 1.4;
+        }
+
+        /* Price */
+        .price-card {
+            max-width: 460px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-lg);
+            padding: 3rem 2.5rem;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 30px 60px -25px rgba(154, 111, 40, 0.2);
+        }
+        .price-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--accent);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+        .price-amount {
+            font-family: 'Fraunces', serif;
+            font-weight: 300;
+            font-size: 4rem;
+            color: var(--ink);
+            line-height: 1;
+            letter-spacing: -0.035em;
+            font-variation-settings: "opsz" 144;
+        }
+        .price-amount .per {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            color: var(--muted);
+            font-weight: 400;
+            letter-spacing: 0;
+        }
+        .price-sub {
+            color: var(--muted);
+            margin: 0.6rem 0 0;
+            font-size: 0.9rem;
+        }
+        .price-list {
+            text-align: left;
+            list-style: none;
+            margin: 2rem 0;
+        }
+        .price-list li {
+            padding: 0.6rem 0;
+            padding-left: 1.85rem;
+            position: relative;
+            font-size: 0.95rem;
+            color: var(--ink-dim);
+        }
+        .price-list li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0.95rem;
+            width: 12px;
+            height: 6px;
+            border-left: 1.5px solid var(--accent);
+            border-bottom: 1.5px solid var(--accent);
+            transform: rotate(-45deg);
+        }
+        .price-divider {
+            border: 0;
+            border-top: 1px solid var(--border);
+            margin: 1.75rem 0 0.75rem;
+        }
+        .price-foot {
+            font-size: 0.82rem;
+            color: var(--muted);
+            margin-top: 1rem;
+        }
+
+        /* Story */
+        .story {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 3rem;
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            position: relative;
+        }
+        .story::before {
+            content: "";
+            position: absolute;
+            top: 3rem;
+            left: 0;
+            width: 2px;
+            height: 40px;
+            background: var(--accent);
+        }
+        .story p {
+            font-family: 'Fraunces', serif;
+            font-weight: 300;
+            font-size: 1.4rem;
+            line-height: 1.45;
+            margin-bottom: 1.25rem;
+            color: var(--ink);
+            letter-spacing: -0.01em;
+        }
+        .story p:last-of-type {
+            margin-bottom: 0;
+        }
+        .story .sign {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-top: 2.25rem;
+            padding-top: 1.75rem;
+            border-top: 1px solid var(--border);
+            color: var(--ink);
+        }
+        .story .sign .role {
+            font-weight: 400;
+            color: var(--muted);
+            display: block;
+            margin-top: 0.2rem;
+            font-size: 0.88rem;
+        }
+
+        /* FAQ */
+        .faq {
+            max-width: 740px;
+            margin: 0 auto;
+        }
+        details {
+            border-bottom: 1px solid var(--border);
+            padding: 1.6rem 0;
+        }
+        details:first-child {
+            border-top: 1px solid var(--border);
+        }
+        summary {
+            font-family: 'Fraunces', serif;
+            font-weight: 400;
+            font-size: 1.25rem;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1.5rem;
+            letter-spacing: -0.01em;
+            color: var(--ink);
+        }
+        summary::-webkit-details-marker { display: none; }
+        summary::after {
+            content: "+";
+            font-family: 'Fraunces', serif;
+            font-size: 1.6rem;
+            font-weight: 300;
+            color: var(--accent);
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+        details[open] summary::after {
+            content: "–";
+        }
+        details p {
+            margin-top: 0.9rem;
+            color: var(--ink-dim);
+            font-size: 0.98rem;
+            line-height: 1.6;
+        }
+
+        /* Final */
+        .final {
+            text-align: center;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+        .final h2 {
+            font-family: 'Fraunces', serif;
+            font-weight: 300;
+            font-size: clamp(2.1rem, 4.5vw, 3.2rem);
+            line-height: 1.1;
+            letter-spacing: -0.025em;
+            margin-bottom: 1.25rem;
+            font-variation-settings: "opsz" 144;
+        }
+        .final h2 em {
+            font-style: italic;
+            font-weight: 400;
+            color: var(--accent);
+        }
+        .final p {
+            color: var(--ink-dim);
+            margin-bottom: 2.5rem;
+            font-size: 1.05rem;
+            line-height: 1.55;
+        }
+        /* Demo form */
+        .demo-form {
+            max-width: 480px;
+            margin: 0 auto;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+        .demo-form .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.85rem;
+        }
+        @media (max-width: 520px) {
+            .demo-form .row { grid-template-columns: 1fr; }
+        }
+        .demo-form input,
+        .demo-form textarea {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.98rem;
+            color: var(--ink);
+            background: var(--bg-card);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius);
+            outline: none;
+            transition: border-color 0.18s;
+            -webkit-appearance: none;
+        }
+        .demo-form input:focus,
+        .demo-form textarea:focus {
+            border-color: var(--accent);
+        }
+        .demo-form textarea {
+            resize: vertical;
+            min-height: 3.5rem;
+            max-height: 10rem;
+            font-family: 'Inter', sans-serif;
+        }
+        .demo-form button {
+            margin-top: 0.4rem;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.98rem;
+            font-weight: 500;
+            color: var(--bg);
+            background: var(--ink);
+            border: 0;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: background 0.18s;
+        }
+        .demo-form button:hover {
+            background: var(--accent);
+        }
+        .demo-form button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .form-error {
+            color: #b33;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 0.5rem;
+            min-height: 1.2rem;
+        }
+        .form-success {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--accent);
+            border-radius: var(--radius-lg);
+            text-align: center;
+            display: none;
+        }
+        .form-success.visible {
+            display: block;
+        }
+        .form-success svg {
+            width: 42px;
+            height: 42px;
+            color: var(--accent);
+            margin-bottom: 0.75rem;
+        }
+        .form-success h3 {
+            font-family: 'Fraunces', serif;
+            font-weight: 400;
+            font-size: 1.5rem;
+            letter-spacing: -0.015em;
+            margin-bottom: 0.5rem;
+        }
+        .form-success p {
+            color: var(--ink-dim);
+            font-size: 0.98rem;
+        }
+        .form-alt {
+            margin-top: 1.5rem;
+            font-size: 0.88rem;
+            color: var(--muted);
+            text-align: center;
+        }
+        .form-alt a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid var(--border-strong);
+        }
+        .form-alt a:hover {
+            border-color: var(--accent);
+        }
+
+        .email-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.65rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius);
+            padding: 0.85rem 1.3rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            color: var(--ink);
+            text-decoration: none;
+            transition: all 0.18s ease;
+            margin-top: 1.5rem;
+        }
+        .email-box:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .email-box svg {
+            width: 18px;
+            height: 18px;
+            color: var(--accent);
+        }
+        .small {
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        /* Footer */
+        footer {
+            padding: 3.5rem 0 3rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+            background: var(--bg);
+        }
+        footer .logo {
+            font-size: 1.35rem;
+            margin-bottom: 0.75rem;
+        }
+        footer p {
+            margin-top: 0.5rem;
+        }
+        footer a {
+            color: var(--ink-dim);
+            text-decoration: none;
+            border-bottom: 1px solid var(--border-strong);
+            padding-bottom: 1px;
+        }
+        footer a:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        @media (max-width: 640px) {
+            .hero { padding: 4rem 0 3rem; }
+            section { padding: 4rem 0; }
+            .card { padding: 1.75rem; }
+            .price-card { padding: 2.25rem 1.5rem; }
+            .story { padding: 2rem; }
+            .story p { font-size: 1.2rem; }
+            .bullets li { gap: 1rem; }
+            .bullets strong { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="nav">
+    <div class="nav-inner">
+        <a href="/" class="logo"><svg class="logo-mark" viewBox="0 0 24 30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path class="body" d="M3 2 L21 2 L21 25 L19 27 L17 25 L15 27 L13 25 L11 27 L9 25 L7 27 L5 25 L3 27 Z"/><rect class="line" x="6" y="7" width="12" height="1.6"/><rect class="line" x="6" y="11" width="9" height="1.6"/><rect class="line" x="6" y="15" width="12" height="1.6"/><rect class="total" x="6" y="19.5" width="12" height="2.4"/></svg>Kvitly</a>
+        <a href="#start" class="btn btn-primary">Skriv til mig</a>
+    </div>
+</nav>
+
+<header class="hero wrap">
+    <span class="eyebrow">Til danske foreninger</span>
+    <h1>Slip for <em>kvitteringskaoset</em> i foreningen</h1>
+    <p class="sub">Frivillige uploader fra mobilen. AI læser beløb, dato og butik automatisk. Kassereren får alt sorteret per udvalg, klar til godkendelse.</p>
+    <div class="hero-actions">
+        <a href="#start" class="btn btn-primary btn-large">Skriv til mig</a>
+        <a href="#hvordan" class="btn btn-secondary btn-large">Se hvordan det virker</a>
+    </div>
+
+    <div class="video-wrap">
+        <div class="video-ratio">
+            {% if loom_embed_url %}
+            <iframe src="{{ loom_embed_url }}" frameborder="0" allowfullscreen></iframe>
+            {% else %}
+            <div class="video-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/>
+                </svg>
+                <div class="label">Video kommer her</div>
+                <div class="note">60 sekunders rundvisning af Kvitly</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="proof-strip">
+        <div class="proof">
+            <div class="proof-num"><em>3–4</em> timer</div>
+            <div class="proof-label">sparet hver måned som kasserer</div>
+        </div>
+        <div class="proof">
+            <div class="proof-num"><em>95%+</em></div>
+            <div class="proof-label">af kvitteringer læses rigtigt første gang</div>
+        </div>
+        <div class="proof">
+            <div class="proof-num"><em>6</em> mdr</div>
+            <div class="proof-label">i daglig drift før åbning for andre</div>
+        </div>
+    </div>
+    <p class="proof-note">Brugt i min egen forening siden oktober 2025, før jeg åbnede Kvitly for andre.</p>
+</header>
+
+<section class="section-soft" id="hvordan">
+    <div class="wrap">
+        <div class="section-head">
+            <h2>Foreningens kasserer bruger for meget tid på det her</h2>
+        </div>
+        <ul class="bullets">
+            <li>
+                <span class="marker">I.</span>
+                <div>
+                    <strong>Jagte kvitteringer</strong>
+                    <span>I tre forskellige Messenger-tråde, mails og sms'er. Nogle gange først dagen før bestyrelsesmødet.</span>
+                </div>
+            </li>
+            <li>
+                <span class="marker">II.</span>
+                <div>
+                    <strong>Manuelt skrive alt ind</strong>
+                    <span>Beløb, dato, butik, udvalg, kategori. Én tastefejl, så ryger totalen.</span>
+                </div>
+            </li>
+            <li>
+                <span class="marker">III.</span>
+                <div>
+                    <strong>Tælle op per udvalg</strong>
+                    <span>Ved hvert bestyrelsesmøde. "Hvor meget har festudvalget brugt i år?" Ingen let måde at svare.</span>
+                </div>
+            </li>
+        </ul>
+        <p class="kicker">Der findes ikke værktøjer lavet til foreningslivet. Kun til virksomheder.</p>
+    </div>
+</section>
+
+<section>
+    <div class="wrap">
+        <div class="section-head">
+            <h2>Kvitly er bygget til <em>foreninger</em></h2>
+            <p>Samme system uanset om I er sportsklub, spejdergruppe eller kulturforening.</p>
+        </div>
+        <ul class="bullets">
+            <li>
+                <span class="marker">✦</span>
+                <div>
+                    <strong>Et billede, en kvittering</strong>
+                    <span>Frivillige uploader fra telefonen. AI læser beløb, dato, butik og kategori automatisk. Ingen app at downloade.</span>
+                </div>
+            </li>
+            <li>
+                <span class="marker">✦</span>
+                <div>
+                    <strong>Overblik per udvalg</strong>
+                    <span>Vælg udvalg ved upload. Se forbrug per udvalg i dashboardet. Filtrér på dato, kategori og betalingstype.</span>
+                </div>
+            </li>
+            <li>
+                <span class="marker">✦</span>
+                <div>
+                    <strong>Alt samlet ét sted</strong>
+                    <span>Godkend udlæg, marker som udbetalt, eksportér til bogføring. Kassereren styrer det hele fra ét dashboard.</span>
+                </div>
+            </li>
+        </ul>
+    </div>
+</section>
+
+<section class="section-soft">
+    <div class="wrap">
+        <div class="section-head">
+            <h2>Sådan virker det</h2>
+            <p>Fra kvittering til færdig bogføring på under et minut.</p>
+        </div>
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-num">I. Upload</div>
+                <h3>Frivillig uploader</h3>
+                <p>Fra mobilen, uden at installere en app. Tager 10 sekunder. Alle i foreningen kan bruge samme upload-link.</p>
+            </div>
+            <div class="card">
+                <div class="card-num">II. AI</div>
+                <h3>AI læser alt</h3>
+                <p>Beløb, dato, butik, kategori, valuta. Frivillige bekræfter inden de trykker indsend.</p>
+            </div>
+            <div class="card">
+                <div class="card-num">III. Dashboard</div>
+                <h3>Dashboardet viser alt</h3>
+                <p>Forbrug per udvalg, grafer over tid, godkend og udbetal med ét klik. Eksport til bogføring når I vil.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="pris">
+    <div class="wrap">
+        <div class="section-head">
+            <h2>Én pris. Ingen <em>valgparalyse.</em></h2>
+            <p>Samme pris uanset antal frivillige, kvitteringer eller udvalg.</p>
+        </div>
+        <div class="price-card">
+            <div class="price-amount">79 kr<span class="per"> / md</span></div>
+            <p class="price-sub">Per forening. Ingen binding.</p>
+            <ul class="price-list">
+                <li>Egen Kvitly med egen URL og login</li>
+                <li>Vi sætter det hele op for jer</li>
+                <li>Ubegrænset antal kvitteringer</li>
+                <li>Ubegrænset antal udvalg og frivillige</li>
+                <li>Eksport til Excel når som helst</li>
+                <li>Support når I har brug for det</li>
+            </ul>
+            <hr class="price-divider">
+            <a href="#start" class="btn btn-primary btn-large" style="width:100%;">Skriv til mig</a>
+            <p class="price-foot">Faktureres månedligt. Opsig når som helst.</p>
+        </div>
+    </div>
+</section>
+
+<section class="section-soft">
+    <div class="wrap">
+        <div class="section-head">
+            <h2>Hvorfor Kvitly findes</h2>
+        </div>
+        <div class="story">
+            <p>Jeg er selv kasserer i en lille forening. Jeg blev træt af at bruge 3 til 4 timer hver måned på at taste kvitteringer og skrive til frivillige "husk at sende mig bonen".</p>
+            <p>Så jeg byggede Kvitly til mig selv. Efter et halvt år med systemet besluttede jeg mig for at åbne det for andre foreninger med samme udfordring.</p>
+            <div class="sign">
+                Othman Ajjawi
+                <span class="role">Bygger af Kvitly, kasserer i en dansk forening</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="wrap">
+        <div class="section-head">
+            <h2>Ofte stillede <em>spørgsmål</em></h2>
+        </div>
+        <div class="faq">
+            <details>
+                <summary>Hvor præcist læser Kvitly kvitteringerne?</summary>
+                <p>Over 95% af alle kvitteringer læses korrekt på første forsøg. Hvis noget er uklart, kan frivillige rette det inden de indsender. I opdager det aldrig som kasserer.</p>
+            </details>
+            <details>
+                <summary>Hvor lang tid tager det at komme i gang?</summary>
+                <p>Vi sætter det hele op for jer inden for 24 til 48 timer efter I skriver. I behøver ikke gøre noget teknisk. I får en URL til frivillige, et login til kassereren, og så er I kørende.</p>
+            </details>
+            <details>
+                <summary>Er det GDPR-compliant?</summary>
+                <p>Ja. Vi underskriver en databehandleraftale med jer inden opsætning. I er dataansvarlige, Kvitly er databehandler, og data ligger i EU.</p>
+            </details>
+            <details>
+                <summary>Kan vi eksportere data og skifte væk?</summary>
+                <p>Ja, når som helst. I kan eksportere alle kvitteringer og data som Excel-fil direkte fra dashboardet. Ingen binding, intet lock-in, ingen opsigelsesvarsel.</p>
+            </details>
+            <details>
+                <summary>Hvor mange kvitteringer kan vi uploade?</summary>
+                <p>Ingen grænse. Selv store foreninger med hundredvis af kvitteringer om måneden er ok.</p>
+            </details>
+            <details>
+                <summary>Erstatter Kvitly vores regnskabssoftware?</summary>
+                <p>Nej, og det er meningen. Kvitly samler og sorterer bilagene. I bruger fortsat jeres regnskabssystem (e-conomic, Dinero, Billy, eller lignende) til det egentlige regnskab. Kvitly gør bare forarbejdet meget hurtigere.</p>
+            </details>
+        </div>
+    </div>
+</section>
+
+<section class="section-soft" id="start">
+    <div class="wrap">
+        <div class="final">
+            <h2>Få <em>Kvitly</em> til jeres forening</h2>
+            <p>Skriv jeres forening, så vender jeg tilbage inden for 24 timer og sætter jer op med en egen Kvitly.</p>
+        </div>
+
+        <form class="demo-form" id="demo-form" novalidate>
+            <div class="row">
+                <input type="text" name="forening" placeholder="Foreningens navn" required autocomplete="organization">
+                <input type="text" name="navn" placeholder="Dit navn" required autocomplete="name">
+            </div>
+            <input type="email" name="email" placeholder="Din email" required autocomplete="email">
+            <textarea name="besked" placeholder="Kort besked (valgfri)" rows="3"></textarea>
+            <button type="submit" id="demo-submit">Send</button>
+            <div class="form-error" id="demo-error"></div>
+        </form>
+
+        <div class="form-success" id="demo-success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+            <h3>Tak, jeg har fået det</h3>
+            <p>Jeg vender tilbage til jer inden for 24 timer.</p>
+        </div>
+
+        <p class="form-alt">Eller skriv direkte til <a href="mailto:Othman@ajjalytics.dev">Othman@ajjalytics.dev</a></p>
+    </div>
+</section>
+
+<script>
+(function() {
+    var form = document.getElementById('demo-form');
+    var submit = document.getElementById('demo-submit');
+    var errorEl = document.getElementById('demo-error');
+    var successEl = document.getElementById('demo-success');
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        errorEl.textContent = '';
+
+        var data = {
+            forening: form.forening.value.trim(),
+            navn: form.navn.value.trim(),
+            email: form.email.value.trim(),
+            besked: form.besked.value.trim()
+        };
+
+        if (!data.forening || !data.navn || !data.email) {
+            errorEl.textContent = 'Udfyld forening, navn og email.';
+            return;
+        }
+        if (!/.+@.+\..+/.test(data.email)) {
+            errorEl.textContent = 'Ugyldig email.';
+            return;
+        }
+
+        submit.disabled = true;
+        submit.textContent = 'Sender...';
+
+        try {
+            var res = await fetch('/demo-request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) {
+                var body = await res.json().catch(function() { return {}; });
+                throw new Error(body.error || 'Kunne ikke sende');
+            }
+            form.style.display = 'none';
+            successEl.classList.add('visible');
+            successEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } catch (err) {
+            submit.disabled = false;
+            submit.textContent = 'Send';
+            errorEl.textContent = err.message + '. Skriv til Othman@ajjalytics.dev.';
+        }
+    });
+})();
+</script>
+
+<footer>
+    <div class="wrap">
+        <a href="/" class="logo"><svg class="logo-mark" viewBox="0 0 24 30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path class="body" d="M3 2 L21 2 L21 25 L19 27 L17 25 L15 27 L13 25 L11 27 L9 25 L7 27 L5 25 L3 27 Z"/><rect class="line" x="6" y="7" width="12" height="1.6"/><rect class="line" x="6" y="11" width="9" height="1.6"/><rect class="line" x="6" y="15" width="12" height="1.6"/><rect class="total" x="6" y="19.5" width="12" height="2.4"/></svg>Kvitly</a>
+        <p>Lavet i Danmark, til foreninger. <a href="mailto:Othman@ajjalytics.dev">Othman@ajjalytics.dev</a></p>
+    </div>
+</footer>
+
+</body>
+</html>

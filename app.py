@@ -77,6 +77,11 @@ def _cleanup_old_temp_files(max_age_seconds=3600):
 
 @app.route("/")
 def index():
+    if os.environ.get("KVITLY_LANDING", "").lower() == "true":
+        return render_template(
+            "landing.html",
+            loom_embed_url=os.environ.get("LOOM_EMBED_URL", ""),
+        )
     config = load_config()
     return render_template(
         "form.html",
@@ -84,6 +89,77 @@ def index():
         categories_json=json.dumps(config.get("categories", ["Andet"])),
         udvalg_json=json.dumps(config.get("udvalg", [])),
     )
+
+
+@app.route("/kvitly")
+def landing_preview():
+    return render_template(
+        "landing.html",
+        loom_embed_url=os.environ.get("LOOM_EMBED_URL", ""),
+    )
+
+
+@app.route("/demo-request", methods=["POST"])
+def demo_request():
+    """Receive demo request from landing page. Log locally and email via Resend."""
+    import requests as http_requests
+
+    data = request.get_json() or {}
+    forening = data.get("forening", "").strip()[:200]
+    navn = data.get("navn", "").strip()[:100]
+    email = data.get("email", "").strip()[:200]
+    besked = data.get("besked", "").strip()[:2000]
+
+    if not forening or not navn or not email:
+        return jsonify({"error": "Udfyld forening, navn og email."}), 400
+    if "@" not in email or "." not in email.split("@")[-1]:
+        return jsonify({"error": "Ugyldig email."}), 400
+
+    entry = {
+        "timestamp": datetime.now().isoformat(),
+        "forening": forening,
+        "navn": navn,
+        "email": email,
+        "besked": besked,
+        "ip": request.headers.get("X-Forwarded-For", request.remote_addr or ""),
+    }
+    log_path = ROOT / "demo_requests.jsonl"
+    try:
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except OSError as e:
+        app.logger.error("Kunne ikke logge demo-request: %s", e)
+
+    resend_key = os.environ.get("RESEND_API_KEY", "")
+    if resend_key:
+        try:
+            sender = os.environ.get("NOTIFY_FROM", "Kvitly <onboarding@resend.dev>")
+            body_text = (
+                f"Forening: {forening}\n"
+                f"Navn: {navn}\n"
+                f"Email: {email}\n"
+                f"IP: {entry['ip']}\n\n"
+                f"Besked:\n{besked or '(ingen besked)'}"
+            )
+            http_requests.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {resend_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": sender,
+                    "to": ["Othman@ajjalytics.dev"],
+                    "subject": f"Kvitly demo-anmodning: {forening}",
+                    "text": body_text,
+                    "reply_to": email,
+                },
+                timeout=10,
+            )
+        except Exception as e:
+            app.logger.warning("Resend email failed: %s", e)
+
+    return jsonify({"status": "ok"})
 
 
 @app.route("/scan", methods=["POST"])

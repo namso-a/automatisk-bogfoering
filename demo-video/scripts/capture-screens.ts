@@ -86,14 +86,14 @@ async function captureFormVideo(): Promise<void> {
     }
     await page.waitForTimeout(500);
 
-    // Choose udvalg from dropdown — use "Aktivitetsudvalg"
-    console.log("  Choosing udvalg: Aktivitetsudvalg");
+    // Choose udvalg from dropdown — use "Aktivitetsudvalget"
+    console.log("  Choosing udvalg: Aktivitetsudvalget");
     const udvalgSelect = page.locator(
       'select[name="udvalg"], select#udvalg, select:has(option:text("udvalg"))'
     );
     const selectCount = await udvalgSelect.count();
     if (selectCount > 0) {
-      await udvalgSelect.first().selectOption({ label: "Aktivitetsudvalg" });
+      await udvalgSelect.first().selectOption({ label: "Aktivitetsudvalget" });
     } else {
       // Might be a custom dropdown
       const udvalgButton = page.locator('button:has-text("udvalg"), [data-udvalg]');
@@ -101,7 +101,7 @@ async function captureFormVideo(): Promise<void> {
         await udvalgButton.first().click();
         await page.waitForTimeout(300);
         const option = page.locator(
-          'li:has-text("Aktivitetsudvalg"), option:has-text("Aktivitetsudvalg")'
+          'li:has-text("Aktivitetsudvalget"), option:has-text("Aktivitetsudvalget")'
         );
         if ((await option.count()) > 0) {
           await option.first().click();

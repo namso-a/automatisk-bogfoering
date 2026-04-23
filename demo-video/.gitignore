@@ -1,0 +1,7 @@
+node_modules/
+dist/
+out/
+public/*.webm
+public/*.mp4
+public/*.png
+.tmp/

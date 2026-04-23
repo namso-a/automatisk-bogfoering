@@ -1,0 +1,32 @@
+{
+  "name": "kvitly-demo-video",
+  "version": "1.0.0",
+  "description": "Remotion demo video for Kvitly — receipt OCR tool for Danish associations",
+  "private": true,
+  "scripts": {
+    "capture": "ts-node --project tsconfig.json scripts/capture-screens.ts",
+    "preview": "remotion preview src/Root.tsx",
+    "render": "remotion render src/Root.tsx KvitlyDemo out/kvitly-demo.mp4 --codec=h264",
+    "build": "npm run capture && npm run render"
+  },
+  "dependencies": {
+    "@remotion/bundler": "^4.0.0",
+    "@remotion/cli": "^4.0.0",
+    "@remotion/media-utils": "^4.0.0",
+    "playwright": "^1.44.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  },
+  "remotion": {
+    "entryPoint": "src/Root.tsx"
+  }
+}

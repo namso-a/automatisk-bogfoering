@@ -193,6 +193,86 @@ def privatlivspolitik():
     return render_template("privatlivspolitik.html")
 
 
+@app.route("/handelsbetingelser")
+def handelsbetingelser():
+    return render_template("handelsbetingelser.html")
+
+
+@app.route("/health")
+def health():
+    return jsonify({"status": "ok", "ts": datetime.now(timezone.utc).isoformat()}), 200
+
+
+@app.route("/demo-request", methods=["POST"])
+@limiter.limit("10 per minute")
+def demo_request():
+    """Receive a demo/invite request from the landing form.
+
+    Auto-generates an invite-code, mails Osman with a one-click invite-link
+    so he can forward to the forening (or grant directly).
+    """
+    import requests as http_requests
+
+    data = request.get_json() or {}
+    forening = (data.get("forening") or "").strip()[:200]
+    navn = (data.get("navn") or "").strip()[:100]
+    email = (data.get("email") or "").strip().lower()[:200]
+    besked = (data.get("besked") or "").strip()[:2000]
+
+    if not forening or not navn or not email:
+        return jsonify({"error": "Udfyld forening, navn og email."}), 400
+    if not is_valid_email(email):
+        return jsonify({"error": "Ugyldig email."}), 400
+
+    try:
+        invite = db.create_invite_code(note=f"Demo-anmodning fra {forening} ({email})")
+    except Exception as e:
+        app.logger.error("demo-request invite-code failed: %s", e)
+        invite = None
+
+    invite_url = (
+        f"{request.url_root.rstrip('/')}/invite/{invite}"
+        if invite else "(kunne ikke genereres — opret manuelt)"
+    )
+    submitter_ip = request.headers.get(
+        "X-Forwarded-For", request.remote_addr or ""
+    ).split(",")[0].strip()
+
+    resend_key = os.environ.get("RESEND_API_KEY", "")
+    if resend_key:
+        try:
+            sender = os.environ.get("NOTIFY_FROM", "Kvitly <onboarding@resend.dev>")
+            body = (
+                f"Ny demo-anmodning på Kvitly\n\n"
+                f"Forening: {forening}\n"
+                f"Navn: {navn}\n"
+                f"Email: {email}\n"
+                f"IP: {submitter_ip}\n\n"
+                f"Besked:\n{besked or '(ingen besked)'}\n\n"
+                f"--- INVITE-LINK (klar til at videresende) ---\n"
+                f"{invite_url}\n"
+            )
+            http_requests.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {resend_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": sender,
+                    "to": ["othman@ajjalytics.dev"],
+                    "subject": f"Kvitly demo-anmodning: {forening}",
+                    "text": body,
+                    "reply_to": email,
+                },
+                timeout=10,
+            )
+        except Exception as e:
+            app.logger.warning("demo-request Resend email failed: %s", e)
+
+    return jsonify({"status": "ok"})
+
+
 @app.route("/login", methods=["GET"])
 def login():
     if auth.decode_jwt(auth.get_jwt_from_request()):
@@ -219,6 +299,63 @@ def logout():
     resp = make_response(redirect(url_for("index")))
     auth.clear_jwt_cookie(resp)
     return resp
+
+
+@app.route("/forgot-password", methods=["GET"])
+def forgot_password():
+    return render_template("forgot_password.html", error=None, sent=False, email="")
+
+
+@app.route("/forgot-password", methods=["POST"])
+@limiter.limit("5 per minute")
+def forgot_password_post():
+    email = (request.form.get("email") or "").strip().lower()
+    if not email or not is_valid_email(email):
+        return render_template(
+            "forgot_password.html",
+            error="Indtast en gyldig email-adresse.",
+            sent=False,
+            email=email,
+        ), 400
+    redirect_url = f"{request.url_root.rstrip('/')}/reset-password"
+    # Always return success — never reveal whether email exists in our system
+    auth.send_password_reset_email(email, redirect_url)
+    return render_template("forgot_password.html", error=None, sent=True, email=email)
+
+
+@app.route("/reset-password", methods=["GET"])
+def reset_password():
+    """Land users here from the email link. Supabase appends auth tokens to
+    the URL hash (#access_token=…&refresh_token=…), which the template's JS
+    must read and submit alongside the new password."""
+    return render_template("reset_password.html", error=None, success=False)
+
+
+@app.route("/reset-password", methods=["POST"])
+@limiter.limit("10 per minute")
+def reset_password_post():
+    access_token = (request.form.get("access_token") or "").strip()
+    password = request.form.get("password") or ""
+    if not access_token:
+        return render_template(
+            "reset_password.html",
+            error="Reset-link er udløbet eller mangler. Bed om et nyt på Glemt adgangskode-siden.",
+            success=False,
+        ), 400
+    if len(password) < 8:
+        return render_template(
+            "reset_password.html",
+            error="Adgangskoden skal være mindst 8 tegn.",
+            success=False,
+        ), 400
+    ok, err = auth.update_user_password(access_token, password)
+    if not ok:
+        return render_template(
+            "reset_password.html",
+            error=f"Kunne ikke opdatere adgangskode: {err or 'ukendt fejl'}",
+            success=False,
+        ), 400
+    return render_template("reset_password.html", error=None, success=True)
 
 
 @app.route("/dev-login")
@@ -799,6 +936,18 @@ def api_delete_kvittering(kvittering_id):
     if not ok:
         return jsonify({"error": "Kvittering ikke fundet."}), 404
     return jsonify({"status": "ok"})
+
+
+# =============================================================================
+# Error handlers
+# =============================================================================
+
+
+@app.errorhandler(404)
+def not_found(e):
+    if request.path.startswith("/dashboard/api/") or request.path.startswith("/u/"):
+        return jsonify({"error": "Ikke fundet."}), 404
+    return render_template("404.html"), 404
 
 
 # =============================================================================

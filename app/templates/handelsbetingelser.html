@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kvitly · Handelsbetingelser</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --ink: #1a1612; --paper: #fafaf7; --accent: #9a6f28; --muted: #8a817a; --warm: #e8e4d8; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--paper); color: var(--ink); padding: 2rem 1.25rem 4rem; }
+        .container { max-width: 720px; margin: 0 auto; }
+        h1 { font-family: 'Fraunces', serif; font-size: 2rem; font-weight: 400; letter-spacing: -0.02em; margin-bottom: 0.4rem; }
+        .updated { font-size: 0.85rem; color: var(--muted); margin-bottom: 2rem; }
+        h2 { font-family: 'Fraunces', serif; font-size: 1.25rem; font-weight: 500; margin: 2rem 0 0.6rem; }
+        p, li { font-size: 0.95rem; line-height: 1.65; color: var(--ink); margin-bottom: 0.9rem; }
+        ul { padding-left: 1.4rem; margin-bottom: 1rem; }
+        a { color: var(--accent); }
+        .back { display: inline-block; margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--muted); text-decoration: none; }
+        .back:hover { color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('index') }}" class="back">← Tilbage</a>
+        <h1>Handelsbetingelser</h1>
+        <p class="updated">Senest opdateret 2026-05-06 — gælder for den lukkede beta</p>
+
+        <h2>1. Hvem er Kvitly</h2>
+        <p>Kvitly drives af <strong>Ajjalytics</strong>, CVR 46105117. Kontakt: <a href="mailto:othman@ajjalytics.dev">othman@ajjalytics.dev</a>.</p>
+
+        <h2>2. Hvad er Kvitly</h2>
+        <p>Kvitly er et SaaS-værktøj til danske foreninger til at modtage, kategorisere og bogføre kvitteringer. Frivillige uploader fra mobilen, AI læser indholdet, kassereren godkender og udbetaler.</p>
+
+        <h2>3. Pris under lukket beta</h2>
+        <p>Indtil vi går i åben drift er Kvitly <strong>gratis</strong> for de første foreninger der inviteres. Der kræves ingen kortoplysninger. Når vi senere indfører betaling, gives mindst 30 dages varsel og du har ret til at sige op uden konsekvenser inden den tid.</p>
+
+        <h2>4. Opsigelse</h2>
+        <p>Du kan til enhver tid opsige din konto ved at skrive til <a href="mailto:othman@ajjalytics.dev">othman@ajjalytics.dev</a>. Vi sletter dine data inden 30 dage, undtaget bogføringspligtigt materiale som skal opbevares i 5 år (se privatlivspolitik).</p>
+
+        <h2>5. Tilgængelighed</h2>
+        <p>Vi tilstræber stabil drift, men giver under lukket beta ingen formel oppe-tids-garanti (SLA). Hvis Kvitly er nede, prøver vi at få det op igen hurtigst muligt og holder dig orienteret.</p>
+
+        <h2>6. Dine ansvar som forening-admin</h2>
+        <ul>
+            <li>Sikre at de medlemmer der får adgang til upload-linket har givet samtykke til behandling af deres data</li>
+            <li>Behandle indkomne data efter god regnskabspraksis</li>
+            <li>Opbevare loginoplysninger sikkert og ikke dele dem</li>
+        </ul>
+
+        <h2>7. Vores ansvar som leverandør</h2>
+        <ul>
+            <li>Sikre at data opbevares i EU (Supabase EU-region, Frankfurt)</li>
+            <li>Tage daglige backups under hele bindings-perioden</li>
+            <li>Behandle dine data udelukkende til at levere Kvitly — ikke videresalg, ikke profilering, ikke træning af AI-modeller</li>
+            <li>Underrette dig hurtigst muligt hvis vi opdager et databrud der vedrører din forening</li>
+        </ul>
+
+        <h2>8. Ændringer</h2>
+        <p>Vi kan ændre disse betingelser. Væsentlige ændringer (fx prissætning, hosting-region) varsles på email mindst 30 dage før de træder i kraft. Andre ændringer (fx oprydning i sprog) opdateres her uden varsel.</p>
+
+        <h2>9. Lov og værneting</h2>
+        <p>Aftalen er underlagt dansk ret. Eventuelle uoverensstemmelser afgøres ved Osmans hjemting medmindre andet aftales.</p>
+
+        <h2>10. Privatliv</h2>
+        <p>Hvilke data vi indsamler, hvor de opbevares og hvor længe står i <a href="{{ url_for('privatlivspolitik') }}">privatlivspolitikken</a>.</p>
+    </div>
+</body>
+</html>

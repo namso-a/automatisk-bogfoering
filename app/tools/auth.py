@@ -212,3 +212,29 @@ def sign_up_with_password(email: str, password: str) -> tuple[str | None, str | 
         return user_id, access_token, None
     except Exception as e:
         return None, None, str(e)
+
+
+def send_password_reset_email(email: str, redirect_to: str) -> str | None:
+    """Trigger Supabase Auth to send a password-reset email.
+
+    Returns None on success, error message on failure. We never reveal whether
+    the email exists — caller should always show a generic success message.
+    """
+    try:
+        sb = anon_client()
+        sb.auth.reset_password_email(email, {"redirect_to": redirect_to})
+        return None
+    except Exception as e:
+        return str(e)
+
+
+def update_user_password(access_token: str, new_password: str) -> tuple[bool, str | None]:
+    """Set a new password for the user identified by access_token (received via
+    the password-reset email link). Returns (ok, error_msg)."""
+    try:
+        sb = anon_client()
+        sb.auth.set_session(access_token, "")
+        sb.auth.update_user({"password": new_password})
+        return True, None
+    except Exception as e:
+        return False, str(e)

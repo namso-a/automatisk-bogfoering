@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kvitly · Privatlivspolitik</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --ink: #1a1612; --paper: #fafaf7; --accent: #9a6f28; --muted: #8a817a; --warm: #e8e4d8; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--paper); color: var(--ink); padding: 2rem 1.25rem 4rem; }
+        .container { max-width: 720px; margin: 0 auto; }
+        h1 { font-family: 'Fraunces', serif; font-size: 2rem; font-weight: 400; letter-spacing: -0.02em; margin-bottom: 0.4rem; }
+        .updated { font-size: 0.85rem; color: var(--muted); margin-bottom: 2rem; }
+        h2 { font-family: 'Fraunces', serif; font-size: 1.25rem; font-weight: 500; margin: 2rem 0 0.6rem; }
+        p, li { font-size: 0.95rem; line-height: 1.65; color: var(--ink); margin-bottom: 0.9rem; }
+        ul { padding-left: 1.4rem; margin-bottom: 1rem; }
+        a { color: var(--accent); }
+        .back { display: inline-block; margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--muted); text-decoration: none; }
+        .back:hover { color: var(--accent); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="javascript:history.back()" class="back">← Tilbage</a>
+        <h1>Privatlivspolitik</h1>
+        <p class="updated">Senest opdateret 2026-05-06</p>
+
+        <h2>1. Hvem er dataansvarlig</h2>
+        <p>Kvitly drives af Ajjalytics. Når du indsender en kvittering via et upload-link, er den forening der ejer linket <strong>dataansvarlig</strong> for behandlingen — Kvitly er <strong>databehandler</strong>.</p>
+
+        <h2>2. Hvilke oplysninger vi indsamler</h2>
+        <ul>
+            <li><strong>Dit navn</strong> (krævet for bogføring)</li>
+            <li><strong>Email</strong> (valgfri — bruges til status-bekræftelser)</li>
+            <li><strong>Telefonnummer + bankkonto</strong> (valgfrit — bruges til udbetaling)</li>
+            <li><strong>Kvitterings-billede</strong> (selve dokumentet)</li>
+            <li><strong>IP-adresse</strong> (logges teknisk for misbrugs-beskyttelse)</li>
+        </ul>
+
+        <h2>3. Hvor opbevares data</h2>
+        <p>Alle data opbevares hos Supabase i EU-region (Frankfurt). Ingen data sendes til lande uden for EU/EØS uden særskilt aftale.</p>
+
+        <h2>4. Hvor længe</h2>
+        <p>Foreningen er forpligtet til at opbevare bogføringsmateriale i <strong>5 år</strong> jf. bogføringsloven. Efter 5 år anonymiseres eller slettes data.</p>
+
+        <h2>5. Dine rettigheder</h2>
+        <p>Du har ret til at få indsigt, rettelse eller sletning af dine oplysninger. Kontakt foreningens administrator direkte med din henvendelse — de har adgang til at slette eller rette din kvittering i Kvitly-dashboardet.</p>
+
+        <h2>6. Cookies</h2>
+        <p>Kvitly bruger ingen tracking-cookies. Kun en sessions-cookie (<code>kvitly_jwt</code>) bruges til at huske at du er logget ind som administrator.</p>
+
+        <h2>7. Kontakt</h2>
+        <p>Spørgsmål om privatlivspolitik kan rettes til <a href="mailto:othman@ajjalytics.dev">othman@ajjalytics.dev</a>.</p>
+    </div>
+</body>
+</html>

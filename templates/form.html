@@ -709,13 +709,19 @@
                 </svg>
                 <span class="brand-name">Kvitly</span>
             </div>
-            <p>Indsend kvittering til bogføring</p>
+            <p>Indsend kvittering til <strong>{{ forening_name }}</strong></p>
         </div>
 
         <form id="receipt-form" enctype="multipart/form-data">
             <div class="field">
                 <label for="name">Navn</label>
                 <input type="text" id="name" name="name" placeholder="Dit fulde navn" required>
+            </div>
+
+            <div class="field">
+                <label for="submitter_email">Email <span style="color:#8a817a; font-weight:400;">(valgfri)</span></label>
+                <input type="email" id="submitter_email" name="submitter_email" placeholder="din@email.dk" autocomplete="email">
+                <small style="display:block; margin-top:0.4rem; color:#8a817a; font-size:0.82rem;">Så får du bekræftelse og status-opdateringer.</small>
             </div>
 
             <div class="field">
@@ -1154,6 +1160,7 @@
             // Save form metadata for the confirm step
             formMeta = {
                 name: document.getElementById('name').value.trim(),
+                submitter_email: document.getElementById('submitter_email').value.trim(),
                 comment: document.getElementById('comment').value.trim(),
                 payment_type: document.querySelector('input[name="payment_type"]:checked')?.value || '',
                 phone: phoneInput.value.trim(),
@@ -1191,7 +1198,7 @@
             let scanErrors = [];
 
             try {
-                const res = await fetch('/scan', { method: 'POST', body: formData });
+                const res = await fetch(`/u/{{ upload_token }}/scan`, { method: 'POST', body: formData });
                 if (!res.ok) {
                     try {
                         const data = await res.json();
@@ -1379,7 +1386,7 @@
             let errors = [];
 
             try {
-                const res = await fetch('/confirm', {
+                const res = await fetch(`/u/{{ upload_token }}/confirm`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),

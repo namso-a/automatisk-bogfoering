@@ -96,57 +96,155 @@
             border-color: var(--accent);
         }
 
-        /* ── Filter bar ── */
-        .filter-bar {
+        /* ── Upload-link card ── */
+        .upload-link-card {
             background: var(--card-bg);
             border: 1px solid var(--warm);
-            border-radius: var(--radius);
-            padding: 1rem 1.25rem;
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .upload-link-card__head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .upload-link-card__head h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin: 0 0 0.25rem;
+        }
+        .upload-link-card__head p {
+            color: var(--muted);
+            font-size: 0.85rem;
+            line-height: 1.45;
+            margin: 0;
+            max-width: 540px;
+        }
+        .upload-link-card__actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .upload-link-card__body {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .upload-link-card__url {
+            flex: 1 1 320px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--paper);
+            border: 1px solid var(--warm);
+            border-radius: 8px;
+            padding: 0.55rem 0.55rem 0.55rem 0.85rem;
+            min-width: 0;
+        }
+        .upload-link-card__url code {
+            flex: 1;
+            font-family: 'Inter', monospace;
+            font-size: 0.92rem;
+            color: var(--ink);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+            letter-spacing: 0.005em;
+        }
+        .btn-copy { flex-shrink: 0; }
+        .btn-copy.copied { background: var(--success-bg); color: var(--success-ink); border-color: #b8d9b8; }
+        .upload-link-card__qr {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.4rem;
+            border: 1px solid var(--warm);
+            border-radius: 8px;
+            background: #fff;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: 0.72rem;
+            font-weight: 500;
+            transition: border-color 0.15s;
+        }
+        .upload-link-card__qr:hover { border-color: var(--accent); color: var(--accent); }
+        .upload-link-card__qr img { display: block; }
+        .upload-link-card__paused {
+            margin-top: 1rem;
+            padding: 0.6rem 0.85rem;
+            background: #fef3e2;
+            color: #8a5a00;
+            border-radius: 6px;
+            font-size: 0.88rem;
+        }
+
+        /* ── Filter bar ── */
+        .filter-bar {
             margin-bottom: 1.5rem;
             display: flex;
             flex-wrap: wrap;
-            gap: 0.75rem;
+            gap: 0.55rem 0.65rem;
             align-items: flex-end;
         }
 
         .filter-group {
+            position: relative;
             display: flex;
             flex-direction: column;
-            gap: 0.3rem;
-            flex: 1 1 130px;
+            gap: 0.25rem;
+            flex: 1 1 140px;
             min-width: 0;
         }
 
         .filter-group label {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.05em;
             color: var(--muted);
         }
 
         .filter-group select,
-        .filter-group input[type="date"] {
+        .filter-group input[type="date"],
+        .filter-group input[type="search"] {
             width: 100%;
-            padding: 0.65rem 0.75rem;
-            min-height: 44px;
+            padding: 0.55rem 0.75rem;
+            min-height: 40px;
             font-family: 'Inter', sans-serif;
-            font-size: 16px;
+            font-size: 0.92rem;
             color: var(--ink);
-            background: var(--paper);
-            border: 1.5px solid var(--warm);
+            background: var(--card-bg);
+            border: 1px solid var(--warm);
             border-radius: 8px;
             outline: none;
             cursor: pointer;
             appearance: none;
             -webkit-appearance: none;
-            transition: border-color 0.2s;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .filter-group select:hover,
+        .filter-group input[type="date"]:hover,
+        .filter-group input[type="search"]:hover {
+            border-color: var(--warm-dark);
         }
 
         .filter-group select:focus,
-        .filter-group input[type="date"]:focus {
+        .filter-group input[type="date"]:focus,
+        .filter-group input[type="search"]:focus {
             border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(154, 111, 40, 0.12);
         }
+
+        .filter-group input[type="search"] { cursor: text; }
 
         .filter-group select {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a8578' stroke-width='1.5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");
@@ -155,26 +253,104 @@
             padding-right: 2rem;
         }
 
+        /* Custom date range row — slides in when "Brugerdefineret" is selected */
+        .filter-custom-range {
+            display: none;
+            flex-basis: 100%;
+            gap: 0.55rem;
+            margin-top: 0.25rem;
+            animation: filterRangeIn 180ms ease-out;
+        }
+        .filter-custom-range.open { display: flex; flex-wrap: wrap; }
+        .filter-custom-range .filter-group { flex: 1 1 160px; }
+
+        @keyframes filterRangeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Hide the browser's dd/mm/yyyy format hint when input is empty + unfocused.
+           Class .has-value is toggled via JS in initFilters. */
+        .filter-group input[type="date"]:not(:focus):not(.has-value)::-webkit-datetime-edit {
+            color: transparent;
+        }
+        .filter-group input[type="date"]:not(:focus):not(.has-value)::-webkit-datetime-edit-fields-wrapper {
+            color: transparent;
+        }
+        /* Firefox fallback */
+        .filter-group input[type="date"]:not(:focus):not(.has-value) {
+            color: transparent;
+        }
+        .filter-group input[type="date"]:focus,
+        .filter-group input[type="date"].has-value {
+            color: var(--ink);
+        }
+
         .filter-reset {
             flex: 0 0 auto;
             align-self: flex-end;
-            padding: 0.55rem 1rem;
+            padding: 0.5rem 0.95rem;
             font-family: 'Inter', sans-serif;
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             font-weight: 500;
             color: var(--muted);
-            background: var(--paper);
-            border: 1.5px solid var(--warm);
+            background: transparent;
+            border: 1px solid var(--warm);
             border-radius: 8px;
             cursor: pointer;
-            transition: color 0.2s, border-color 0.2s;
+            transition: color 0.15s, border-color 0.15s, background 0.15s;
             white-space: nowrap;
+            min-height: 40px;
         }
 
         .filter-reset:hover {
             color: var(--accent);
             border-color: var(--accent);
+            background: var(--card-bg);
         }
+
+        @media (max-width: 640px) {
+            .filter-group { flex-basis: calc(50% - 0.325rem); }
+            .filter-group:has(input[type="search"]) { flex-basis: 100%; }
+            .filter-reset { flex-basis: 100%; min-width: 0; }
+        }
+
+        /* ── Data error panel ── */
+        .data-error {
+            padding: 2rem 1.25rem;
+            text-align: center;
+            max-width: 520px;
+            margin: 1rem auto;
+            background: #fffaf0;
+            border: 1px solid #f0d8a8;
+            border-radius: 10px;
+        }
+        .data-error strong {
+            display: block;
+            font-family: 'Fraunces', serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--ink);
+            margin-bottom: 0.5rem;
+        }
+        .data-error__msg {
+            font-size: 0.92rem;
+            color: var(--accent);
+            margin-bottom: 0.6rem;
+        }
+        .data-error__hint {
+            font-size: 0.85rem;
+            color: var(--muted);
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+        }
+        .data-error__upstream {
+            font-size: 0.78rem;
+            color: var(--muted);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            margin-bottom: 1rem;
+        }
+        .data-error .btn { margin-top: 0.25rem; }
 
         /* ── Tabs ── */
         .tab-nav {
@@ -638,15 +814,46 @@
                 </svg>
                 <h1>Kvitly</h1>
             </div>
-            <p>Dashboard · kvitteringsoversigt</p>
+            <p>{{ forening_name }} · kvitteringsoversigt</p>
         </div>
         <div class="header-right">
-            <a href="/dashboard/logout">Log ud</a>
+            <a href="/logout">Log ud</a>
         </div>
     </header>
 
+    <!-- Upload-link card -->
+    <section class="upload-link-card" id="uploadLinkCard">
+        <div class="upload-link-card__head">
+            <div>
+                <h2>Indsamlingslink til medlemmer</h2>
+                <p>Del dette link i jeres Facebook-gruppe, mail eller print QR-koden. Medlemmer kan uploade kvitteringer uden login.</p>
+            </div>
+            <div class="upload-link-card__actions">
+                <button class="btn btn-secondary" id="btnRegenerate" type="button" title="Gør gammelt link ugyldigt og lav nyt">↻ Regenerér</button>
+                <button class="btn btn-secondary" id="btnTogglePause" type="button">{% if upload_disabled %}▶ Genoptag uploads{% else %}⏸ Sæt på pause{% endif %}</button>
+            </div>
+        </div>
+        <div class="upload-link-card__body">
+            <div class="upload-link-card__url">
+                <code id="uploadUrl">{{ upload_link_base }}/u/{{ upload_token }}</code>
+                <button class="btn btn-secondary btn-copy" id="btnCopyLink" type="button">Kopier</button>
+            </div>
+            <a class="upload-link-card__qr" href="/dashboard/qr/{{ upload_token }}.png" download="kvitly-upload-{{ upload_token }}.png" title="Download QR-kode">
+                <img src="/dashboard/qr/{{ upload_token }}.png" alt="QR-kode til upload-link" width="96" height="96">
+                <span>QR ↓</span>
+            </a>
+        </div>
+        {% if upload_disabled %}
+        <p class="upload-link-card__paused">Uploads er sat på pause. Medlemmer kan ikke indsende lige nu.</p>
+        {% endif %}
+    </section>
+
     <!-- Filter bar -->
     <div class="filter-bar" id="filterBar">
+        <div class="filter-group" style="flex: 2 1 220px;">
+            <label for="fSearch">Søg</label>
+            <input type="search" id="fSearch" placeholder="Butik, beskrivelse, navn …">
+        </div>
         <div class="filter-group">
             <label for="fUdvalg">Udvalg</label>
             <select id="fUdvalg">
@@ -654,12 +861,17 @@
             </select>
         </div>
         <div class="filter-group">
-            <label for="fFra">Fra dato</label>
-            <input type="date" id="fFra">
-        </div>
-        <div class="filter-group">
-            <label for="fTil">Til dato</label>
-            <input type="date" id="fTil">
+            <label for="fPeriode">Periode</label>
+            <select id="fPeriode">
+                <option value="">Alle</option>
+                <option value="i-dag">I dag</option>
+                <option value="denne-uge">Denne uge</option>
+                <option value="denne-maaned">Denne måned</option>
+                <option value="sidste-30">Sidste 30 dage</option>
+                <option value="sidste-90">Sidste 90 dage</option>
+                <option value="i-aar">I år</option>
+                <option value="brugerdef">Brugerdefineret …</option>
+            </select>
         </div>
         <div class="filter-group">
             <label for="fKategori">Kategori</label>
@@ -685,6 +897,17 @@
             </select>
         </div>
         <button class="filter-reset" id="btnNulstil">Nulstil</button>
+
+        <div class="filter-custom-range" id="filterCustomRange">
+            <div class="filter-group">
+                <label for="fFra">Fra</label>
+                <input type="date" id="fFra">
+            </div>
+            <div class="filter-group">
+                <label for="fTil">Til</label>
+                <input type="date" id="fTil">
+            </div>
+        </div>
     </div>
 
     <!-- Tab navigation -->
@@ -850,10 +1073,55 @@
     }
 
     // ── Filter logic ──
+    function todayISO() {
+        const d = new Date();
+        const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+    function shiftDaysISO(days) {
+        const d = new Date();
+        d.setDate(d.getDate() + days);
+        const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+    function startOfWeekISO() {
+        const d = new Date();
+        const day = (d.getDay() + 6) % 7; // mandag = 0
+        d.setDate(d.getDate() - day);
+        const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), dd = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${dd}`;
+    }
+    function startOfMonthISO() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+    }
+    function startOfYearISO() {
+        return `${new Date().getFullYear()}-01-01`;
+    }
+
+    function resolvePeriode(value) {
+        // Returns {fra, til} ISO strings, or {} if no preset constraint.
+        switch (value) {
+            case 'i-dag': return { fra: todayISO(), til: todayISO() };
+            case 'denne-uge': return { fra: startOfWeekISO(), til: todayISO() };
+            case 'denne-maaned': return { fra: startOfMonthISO(), til: todayISO() };
+            case 'sidste-30': return { fra: shiftDaysISO(-30), til: todayISO() };
+            case 'sidste-90': return { fra: shiftDaysISO(-90), til: todayISO() };
+            case 'i-aar': return { fra: startOfYearISO(), til: todayISO() };
+            case 'brugerdef':
+                return {
+                    fra: document.getElementById('fFra').value || null,
+                    til: document.getElementById('fTil').value || null,
+                };
+            default: return {};
+        }
+    }
+
     function applyFilters() {
+        const fSearch = (document.getElementById('fSearch').value || '').trim().toLowerCase();
         const fUdvalg = document.getElementById('fUdvalg').value.trim().toLowerCase();
-        const fFra = document.getElementById('fFra').value;
-        const fTil = document.getElementById('fTil').value;
+        const periode = document.getElementById('fPeriode').value;
+        const { fra: fFra, til: fTil } = resolvePeriode(periode);
         const fKategori = document.getElementById('fKategori').value.trim().toLowerCase();
         const fType = document.getElementById('fType').value.trim().toLowerCase();
         const fStatus = document.getElementById('fStatus').value.trim().toLowerCase();
@@ -873,6 +1141,12 @@
                 if (fStatus === 'afventer' && (s === 'godkendt' || s === 'udbetalt')) return false;
                 if (fStatus === 'godkendt' && s !== 'godkendt') return false;
                 if (fStatus === 'udbetalt' && s !== 'udbetalt') return false;
+            }
+            if (fSearch) {
+                const haystack = [
+                    row['Butik'], row['Beskrivelse'], row['Navn'], row['Kommentar'],
+                ].map(v => (v || '').toString().toLowerCase()).join('  ');
+                if (!haystack.includes(fSearch)) return false;
             }
             return true;
         });
@@ -1396,19 +1670,63 @@
     }
 
     // ── Filter listeners ──
+    function syncCustomRangeVisibility() {
+        const periode = document.getElementById('fPeriode').value;
+        const customWrap = document.getElementById('filterCustomRange');
+        if (periode === 'brugerdef') {
+            customWrap.classList.add('open');
+        } else {
+            customWrap.classList.remove('open');
+            // Clear stale custom dates så de ikke filtrerer skjult
+            const fra = document.getElementById('fFra');
+            const til = document.getElementById('fTil');
+            fra.value = ''; fra.classList.remove('has-value');
+            til.value = ''; til.classList.remove('has-value');
+        }
+    }
+
     function initFilters() {
-        ['fUdvalg', 'fFra', 'fTil', 'fKategori', 'fType', 'fStatus'].forEach(id => {
+        // Change-events trigger filter
+        ['fUdvalg', 'fPeriode', 'fFra', 'fTil', 'fKategori', 'fType', 'fStatus'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.addEventListener('change', applyFilters);
         });
 
+        // Track empty/filled state on date inputs to hide format hint
+        ['fFra', 'fTil'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const sync = () => el.classList.toggle('has-value', !!el.value);
+            el.addEventListener('input', sync);
+            el.addEventListener('change', sync);
+            sync();
+        });
+
+        // Search field debounced via input event
+        const search = document.getElementById('fSearch');
+        if (search) {
+            let t;
+            search.addEventListener('input', () => {
+                clearTimeout(t);
+                t = setTimeout(applyFilters, 150);
+            });
+        }
+
+        // Periode dropdown also toggles custom range visibility
+        document.getElementById('fPeriode').addEventListener('change', syncCustomRangeVisibility);
+
         document.getElementById('btnNulstil').addEventListener('click', () => {
+            document.getElementById('fSearch').value = '';
             document.getElementById('fUdvalg').value = '';
-            document.getElementById('fFra').value = '';
-            document.getElementById('fTil').value = '';
+            document.getElementById('fPeriode').value = '';
+            const fra = document.getElementById('fFra');
+            const til = document.getElementById('fTil');
+            fra.value = ''; fra.classList.remove('has-value');
+            til.value = ''; til.classList.remove('has-value');
             document.getElementById('fKategori').value = '';
             document.getElementById('fType').value = '';
             document.getElementById('fStatus').value = '';
+            syncCustomRangeVisibility();
             applyFilters();
         });
 
@@ -1426,27 +1744,73 @@
     }
 
     // ── Fetch data ──
+    function renderDataError({ message, hint, upstream }) {
+        const wrap = document.createElement('div');
+        wrap.className = 'data-error';
+
+        const title = document.createElement('strong');
+        title.textContent = 'Kunne ikke hente data';
+        wrap.appendChild(title);
+
+        const msg = document.createElement('p');
+        msg.className = 'data-error__msg';
+        msg.textContent = message || 'Ukendt fejl';
+        wrap.appendChild(msg);
+
+        if (hint) {
+            const hintEl = document.createElement('p');
+            hintEl.className = 'data-error__hint';
+            hintEl.textContent = hint;
+            wrap.appendChild(hintEl);
+        }
+        if (upstream) {
+            const up = document.createElement('p');
+            up.className = 'data-error__upstream';
+            up.textContent = `Upstream-status: ${upstream}`;
+            wrap.appendChild(up);
+        }
+
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-secondary';
+        btn.textContent = 'Prøv igen';
+        btn.addEventListener('click', () => location.reload());
+        wrap.appendChild(btn);
+
+        const host = document.getElementById('loadingState');
+        host.replaceChildren(wrap);
+    }
+
     async function loadData() {
+        let payload = null;
         try {
             const resp = await fetch('/dashboard/api/data');
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const json = await resp.json();
+            try { payload = await resp.json(); } catch { payload = null; }
 
-            if (json.error) throw new Error(json.error);
-            if (!Array.isArray(json.rows)) throw new Error('Ugyldigt dataformat fra server.');
+            if (!resp.ok) {
+                const err = new Error((payload && payload.error) || `HTTP ${resp.status}`);
+                err.payload = payload;
+                throw err;
+            }
+            if (payload && payload.error) {
+                const err = new Error(payload.error);
+                err.payload = payload;
+                throw err;
+            }
+            if (!payload || !Array.isArray(payload.rows)) {
+                throw new Error('Ugyldigt dataformat fra server.');
+            }
 
-            allRows = json.rows;
+            allRows = payload.rows;
             filteredRows = [...allRows];
 
             revealDashboard();
             renderAll();
         } catch (err) {
-            document.getElementById('loadingState').innerHTML =
-                `<div style="padding:2rem;text-align:center;color:var(--accent);">
-                    <strong>Fejl ved hentning af data</strong><br>
-                    <span style="font-size:0.88rem;color:var(--muted);">${escapeHTML(err.message)}</span><br>
-                    <button class="btn btn-secondary" style="margin-top:1rem;" onclick="location.reload()">Prøv igen</button>
-                </div>`;
+            renderDataError({
+                message: err.message,
+                hint: err.payload && err.payload.hint,
+                upstream: err.payload && err.payload.upstream_status,
+            });
         }
     }
 
@@ -1465,6 +1829,72 @@
         init();
     }
 
+}());
+</script>
+
+<!-- Upload-link card handlers -->
+<script>
+(function () {
+    const copyBtn = document.getElementById('btnCopyLink');
+    const urlEl = document.getElementById('uploadUrl');
+    const regenBtn = document.getElementById('btnRegenerate');
+    const pauseBtn = document.getElementById('btnTogglePause');
+
+    if (copyBtn && urlEl) {
+        copyBtn.addEventListener('click', async () => {
+            const text = urlEl.textContent.trim();
+            try {
+                await navigator.clipboard.writeText(text);
+                copyBtn.textContent = '✓ Kopieret';
+                copyBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyBtn.textContent = 'Kopier';
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            } catch {
+                copyBtn.textContent = 'Kunne ikke kopiere';
+                setTimeout(() => { copyBtn.textContent = 'Kopier'; }, 2000);
+            }
+        });
+    }
+
+    if (regenBtn) {
+        regenBtn.addEventListener('click', async () => {
+            if (!confirm('Generér nyt upload-link?\n\nDet gamle link bliver ugyldigt med det samme — alle der har det, kan ikke længere indsende kvitteringer.')) return;
+            regenBtn.disabled = true;
+            regenBtn.textContent = 'Genererer …';
+            try {
+                const r = await fetch('/dashboard/api/regenerate-token', { method: 'POST' });
+                const j = await r.json();
+                if (!r.ok || !j.token) throw new Error(j.error || 'Kunne ikke regenerere link');
+                location.reload();
+            } catch (e) {
+                alert('Fejl: ' + e.message);
+                regenBtn.disabled = false;
+                regenBtn.textContent = '↻ Regenerér';
+            }
+        });
+    }
+
+    if (pauseBtn) {
+        pauseBtn.addEventListener('click', async () => {
+            const isCurrentlyPaused = pauseBtn.textContent.includes('Genoptag');
+            const newDisabled = !isCurrentlyPaused;
+            pauseBtn.disabled = true;
+            try {
+                const r = await fetch('/dashboard/api/upload-disabled', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ disabled: newDisabled }),
+                });
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                location.reload();
+            } catch (e) {
+                alert('Fejl: ' + e.message);
+                pauseBtn.disabled = false;
+            }
+        });
+    }
 }());
 </script>
 </body>

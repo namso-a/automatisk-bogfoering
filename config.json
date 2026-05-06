@@ -1,14 +1,5 @@
 {
-  "apps_script_url": "https://script.google.com/macros/s/AKfycbxK0p9EyYRG1c3oD5nk30JB3fXLjO4JpviA3RUDE3fvhcajEBScAx6nw0gplq1SYnPn/exec",
-  "udvalg": [
-    "Bestyrelsen",
-    "Festudvalget",
-    "Aktivitetsudvalget",
-    "Kommunikationsudvalget",
-    "Økonomiudvalget",
-    "Andet"
-  ],
-  "categories": [
+  "default_categories": [
     "Transport",
     "Forplejning",
     "Materialer",
@@ -18,5 +9,12 @@
     "Abonnementer",
     "Andet"
   ],
-  "forening_name": "Kvitly"
+  "default_udvalg": [
+    "Bestyrelsen",
+    "Festudvalget",
+    "Aktivitetsudvalget",
+    "Kommunikationsudvalget",
+    "Økonomiudvalget",
+    "Andet"
+  ]
 }

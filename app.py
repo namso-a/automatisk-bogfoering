@@ -144,6 +144,15 @@ def validate_ocr_result(receipt_data: dict) -> dict:
     return receipt_data
 
 
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]{2,}$")
+
+
+def is_valid_email(email: str) -> bool:
+    if not email or len(email) > 200:
+        return False
+    return bool(_EMAIL_RE.match(email.strip().lower()))
+
+
 def slugify(s: str) -> str:
     """Generate a URL-safe slug from a forening name."""
     s = (s or "").lower().strip()
@@ -424,6 +433,10 @@ def upload_confirm(token):
 
     name = (data.get("name") or "").strip()
     submitter_email = (data.get("submitter_email") or "").strip().lower() or None
+    if submitter_email and not is_valid_email(submitter_email):
+        return jsonify({"error": "Ugyldig email-adresse."}), 400
+    if forening.get("member_email_required") and not submitter_email:
+        return jsonify({"error": "Email er påkrævet for denne forening."}), 400
     comment = (data.get("comment") or "").strip()
     payment_type = (data.get("payment_type") or "").strip()
     phone = (data.get("phone") or "").strip()

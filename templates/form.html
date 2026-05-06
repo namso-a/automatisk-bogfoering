@@ -86,7 +86,7 @@
             margin-bottom: 0.5rem;
         }
 
-        select, input[type="text"], input[type="tel"], textarea {
+        select, input[type="text"], input[type="tel"], input[type="email"], textarea {
             width: 100%;
             padding: 0.85rem 1rem;
             font-family: 'Inter', sans-serif;
@@ -96,7 +96,7 @@
             border: 1.5px solid var(--warm);
             border-radius: var(--radius);
             outline: none;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
             appearance: none;
             -webkit-appearance: none;
         }
@@ -109,6 +109,17 @@
 
         select:focus, input:focus, textarea:focus {
             border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(154, 111, 40, 0.12);
+        }
+
+        /* Email validation feedback — only show invalid styling after user
+           has interacted with the field, never on a pristine empty field */
+        input[type="email"]:not(:placeholder-shown):not(:focus):invalid {
+            border-color: #c0392b;
+            box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.10);
+        }
+        input[type="email"]:not(:placeholder-shown):not(:focus):invalid + small.email-hint {
+            color: #c0392b;
         }
 
         /* Radio group — pill buttons */
@@ -720,8 +731,17 @@
 
             <div class="field">
                 <label for="submitter_email">Email{% if not member_email_required %} <span style="color:#8a817a; font-weight:400;">(valgfri)</span>{% endif %}</label>
-                <input type="email" id="submitter_email" name="submitter_email" placeholder="din@email.dk" autocomplete="email"{% if member_email_required %} required{% endif %}>
-                <small style="display:block; margin-top:0.4rem; color:#8a817a; font-size:0.82rem;">Så får du bekræftelse og status-opdateringer.</small>
+                <input type="email" id="submitter_email" name="submitter_email"
+                       placeholder="din@email.dk"
+                       autocomplete="email"
+                       inputmode="email"
+                       spellcheck="false"
+                       autocapitalize="off"
+                       maxlength="200"
+                       pattern="[^@\s]+@[^@\s]+\.[^@\s]+"
+                       title="Indtast en gyldig email, fx navn@domain.dk"
+                       {% if member_email_required %}required{% endif %}>
+                <small class="email-hint" style="display:block; margin-top:0.4rem; color:#8a817a; font-size:0.82rem;">Så får du bekræftelse og status-opdateringer.</small>
             </div>
 
             <div class="field">

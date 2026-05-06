@@ -222,57 +222,83 @@
         }
 
         /* Video */
-        .video-wrap {
-            position: relative;
-            max-width: 900px;
-            margin: 0 auto;
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            border: 1px solid var(--border-strong);
+        /* Nav login link */
+        .nav-link {
+            color: var(--muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-decoration: none;
+            margin-left: auto;
+            margin-right: 1.25rem;
+            transition: color 0.15s;
+        }
+        .nav-link:hover { color: var(--ink); }
+        @media (max-width: 480px) {
+            .nav-link { margin-right: 0.75rem; font-size: 0.88rem; }
+        }
+
+        /* Early-bird banner (replaces hero video) */
+        .early-bird {
+            max-width: 720px;
+            margin: 2rem auto 0;
             background: var(--bg-card);
-            box-shadow: 0 30px 80px -30px rgba(26, 22, 18, 0.2),
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem 1.75rem;
+            box-shadow: 0 16px 48px -22px rgba(26, 22, 18, 0.22),
                         0 0 0 1px var(--accent-soft);
-        }
-        .video-ratio {
-            position: relative;
-            padding-bottom: 62.5%;
-            height: 0;
-        }
-        .video-ratio iframe,
-        .video-placeholder {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%;
-            height: 100%;
-            border: 0;
-        }
-        .video-placeholder {
             display: flex;
             align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-soft) 100%);
-            color: var(--muted);
-            text-align: center;
-            padding: 2rem;
-            gap: 1rem;
+            gap: 1.25rem;
+            text-align: left;
         }
-        .video-placeholder svg {
-            width: 64px;
-            height: 64px;
+        .early-bird__icon {
+            width: 52px;
+            height: 52px;
+            flex-shrink: 0;
+            background: var(--accent-soft);
             color: var(--accent);
-            opacity: 0.8;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
-        .video-placeholder .label {
+        .early-bird__icon svg { width: 26px; height: 26px; }
+        .early-bird__body { flex: 1; min-width: 0; }
+        .early-bird__eyebrow {
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 0.35rem;
+        }
+        .early-bird__title {
             font-family: 'Fraunces', serif;
-            font-weight: 400;
+            font-size: 1.1rem;
+            font-weight: 500;
             color: var(--ink);
-            font-size: 1.2rem;
+            line-height: 1.4;
+            margin-bottom: 0.25rem;
             letter-spacing: -0.01em;
         }
-        .video-placeholder .note {
-            font-size: 0.85rem;
+        .early-bird__title em {
+            color: var(--accent);
+            font-style: normal;
+            font-weight: 600;
+        }
+        .early-bird__note {
+            font-size: 0.88rem;
             color: var(--muted);
+            line-height: 1.5;
+        }
+        @media (max-width: 600px) {
+            .early-bird {
+                flex-direction: column;
+                text-align: center;
+                padding: 1.25rem;
+                gap: 0.85rem;
+            }
         }
 
         /* Proof strip */
@@ -827,6 +853,7 @@
 <nav class="nav">
     <div class="nav-inner">
         <a href="/" class="logo"><svg class="logo-mark" viewBox="0 0 24 30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path class="body" d="M3 2 L21 2 L21 25 L19 27 L17 25 L15 27 L13 25 L11 27 L9 25 L7 27 L5 25 L3 27 Z"/><rect class="line" x="6" y="7" width="12" height="1.6"/><rect class="line" x="6" y="11" width="9" height="1.6"/><rect class="line" x="6" y="15" width="12" height="1.6"/><rect class="total" x="6" y="19.5" width="12" height="2.4"/></svg>Kvitly</a>
+        <a href="/login" class="nav-link">Log ind</a>
         <a href="#start" class="btn btn-primary">Skriv til mig</a>
     </div>
 </nav>
@@ -840,20 +867,16 @@
         <a href="#hvordan" class="btn btn-secondary btn-large">Se hvordan det virker</a>
     </div>
 
-    <div class="video-wrap">
-        <div class="video-ratio">
-            {% if loom_embed_url %}
-            <iframe src="{{ loom_embed_url }}" frameborder="0" allowfullscreen></iframe>
-            {% else %}
-            <div class="video-placeholder">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/>
-                </svg>
-                <div class="label">Video kommer her</div>
-                <div class="note">60 sekunders rundvisning af Kvitly</div>
-            </div>
-            {% endif %}
+    <div class="early-bird">
+        <div class="early-bird__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <path d="M12 2 L14.6 8.5 L21.5 9.4 L16.3 14 L17.8 21 L12 17.4 L6.2 21 L7.7 14 L2.5 9.4 L9.4 8.5 Z"/>
+            </svg>
+        </div>
+        <div class="early-bird__body">
+            <div class="early-bird__eyebrow">Lukket beta</div>
+            <div class="early-bird__title">De første <em>5 foreninger</em> får Kvitly gratis resten af 2026.</div>
+            <div class="early-bird__note">Ingen kortoplysninger, ingen binding. Skriv hvis I vil være blandt dem.</div>
         </div>
     </div>
 

@@ -328,7 +328,7 @@ def reset_password():
     """Land users here from the email link. Supabase appends auth tokens to
     the URL hash (#access_token=…&refresh_token=…), which the template's JS
     must read and submit alongside the new password."""
-    return render_template("reset_password.html", error=None, success=False)
+    return render_template("reset_password.html", error=None, success=False, access_token="")
 
 
 @app.route("/reset-password", methods=["POST"])
@@ -341,21 +341,34 @@ def reset_password_post():
             "reset_password.html",
             error="Reset-link er udløbet eller mangler. Bed om et nyt på Glemt adgangskode-siden.",
             success=False,
+            access_token="",
         ), 400
     if len(password) < 8:
         return render_template(
             "reset_password.html",
             error="Adgangskoden skal være mindst 8 tegn.",
             success=False,
+            access_token=access_token,
         ), 400
     ok, err = auth.update_user_password(access_token, password)
     if not ok:
+        # Translate common Supabase errors to Danish
+        msg = str(err or "ukendt fejl")
+        friendly = msg
+        if "different from the old" in msg.lower():
+            friendly = "Den nye adgangskode må ikke være den samme som din nuværende. Vælg en anden."
+        elif "weak" in msg.lower() or "weak_password" in msg.lower():
+            friendly = "Adgangskoden er for svag. Brug minimum 8 tegn med blanding af tal og bogstaver."
+        elif "expired" in msg.lower() or "invalid" in msg.lower():
+            friendly = "Reset-linket er udløbet. Bed om et nyt på Glemt adgangskode-siden."
+            access_token = ""  # token won't work — force fresh request
         return render_template(
             "reset_password.html",
-            error=f"Kunne ikke opdatere adgangskode: {err or 'ukendt fejl'}",
+            error=friendly,
             success=False,
+            access_token=access_token,
         ), 400
-    return render_template("reset_password.html", error=None, success=True)
+    return render_template("reset_password.html", error=None, success=True, access_token="")
 
 
 @app.route("/dev-login")
@@ -547,10 +560,23 @@ def upload_scan(token):
                 app.logger.error("Scan fejl for %s: %s", original_name, e)
                 if temp_path.exists():
                     temp_path.unlink()
+                # Translate raw upstream errors to friendly Danish without
+                # leaking API URLs or keys to the client.
+                err_str = str(e)
+                if "503" in err_str or "Service Unavailable" in err_str:
+                    friendly = "OCR-tjenesten er midlertidigt overbelastet. Prøv igen om et øjeblik."
+                elif "429" in err_str or "rate" in err_str.lower():
+                    friendly = "Vi har ramt timens grænse på OCR-tjenesten. Prøv igen om lidt."
+                elif "timeout" in err_str.lower():
+                    friendly = "OCR-tjenesten svarede ikke i tide. Prøv igen."
+                elif "generativelanguage.googleapis.com" in err_str:
+                    friendly = "OCR-tjenesten fejlede. Prøv igen om lidt."
+                else:
+                    friendly = "Kunne ikke læse kvitteringen automatisk. Prøv igen, eller indsend uden auto-data."
                 yield json.dumps({
                     "index": i,
                     "status": "error",
-                    "error": str(e),
+                    "error": friendly,
                     "filename": original_name,
                 }) + "\n"
 

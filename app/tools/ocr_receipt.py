@@ -147,15 +147,34 @@ def extract_receipt_data(image_path: str, categories: list[str] | None = None) -
     max_attempts = 5
     for attempt in range(max_attempts):
         _throttle()
-        resp = requests.post(url, json=payload, timeout=60)
-        if resp.status_code == 429:
+        try:
+            resp = requests.post(url, json=payload, timeout=60)
+        except requests.exceptions.RequestException as e:
+            # Network error / connection reset — retry with backoff
             if attempt < max_attempts - 1:
-                wait = 60  # Gemini free tier resets per-minute, always wait 60s
+                wait = 2 ** attempt  # 1, 2, 4, 8 s
+                print(f"[OCR] network error, attempt {attempt+1}/{max_attempts}: {e}; retry in {wait}s")
+                time.sleep(wait)
+                continue
+            raise
+
+        if resp.status_code == 429:
+            # Free tier per-minute rate-limit — wait full minute
+            if attempt < max_attempts - 1:
+                wait = 60
                 print(f"[OCR] 429 rate limit, attempt {attempt+1}/{max_attempts}, waiting {wait}s...")
                 time.sleep(wait)
                 continue
-            else:
-                resp.raise_for_status()
+            resp.raise_for_status()
+        elif 500 <= resp.status_code < 600:
+            # Transient server-side outage (503 Service Unavailable, 502, etc.)
+            # Gemini hiccups during peak — back off and retry
+            if attempt < max_attempts - 1:
+                wait = 2 ** attempt + 1  # 2, 3, 5, 9 s
+                print(f"[OCR] {resp.status_code} from Gemini, attempt {attempt+1}/{max_attempts}, waiting {wait}s...")
+                time.sleep(wait)
+                continue
+            resp.raise_for_status()
         elif resp.status_code >= 400:
             resp.raise_for_status()
         else:

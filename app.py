@@ -72,6 +72,27 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key-change-me")
 TMP_DIR = ROOT / ".tmp"
 TMP_DIR.mkdir(exist_ok=True)
 
+CANONICAL_HOST = os.environ.get("CANONICAL_HOST", "").strip().lower()
+
+
+@app.before_request
+def force_canonical_host():
+    """301-redirect any request hitting a non-canonical host (e.g. the legacy
+    *.onrender.com URL) to the canonical domain. Idempotent — does nothing
+    when CANONICAL_HOST is unset (development) or already matched."""
+    if not CANONICAL_HOST:
+        return None
+    host = (request.host or "").lower()
+    if host == CANONICAL_HOST:
+        return None
+    # Skip during local dev (localhost / 127.0.0.1 / private LAN ips)
+    if host.startswith(("localhost", "127.", "192.168.", "10.")):
+        return None
+    target = f"https://{CANONICAL_HOST}{request.full_path}"
+    if target.endswith("?"):
+        target = target[:-1]
+    return redirect(target, code=301)
+
 # Rate limiter: anonymous /u/<token>/* routes are protected
 limiter = Limiter(
     get_remote_address,
@@ -188,6 +209,39 @@ def login_post():
 def logout():
     resp = make_response(redirect(url_for("index")))
     auth.clear_jwt_cookie(resp)
+    return resp
+
+
+@app.route("/dev-login")
+def dev_login():
+    """One-click admin login for development/testing.
+
+    Activated only when DEV_LOGIN_KEY is set in env. Visit
+        /dev-login?key=<DEV_LOGIN_KEY>
+    and Flask will sign you in as DEV_LOGIN_EMAIL using DEV_LOGIN_PASSWORD,
+    then redirect to /dashboard. Bookmark the URL for one-click access.
+
+    Remove DEV_LOGIN_KEY from env to disable the route entirely.
+    """
+    expected_key = os.environ.get("DEV_LOGIN_KEY", "").strip()
+    email = os.environ.get("DEV_LOGIN_EMAIL", "").strip()
+    password = os.environ.get("DEV_LOGIN_PASSWORD", "")
+
+    if not expected_key or not email or not password:
+        return "Dev login is not configured.", 404
+
+    provided = (request.args.get("key") or "").strip()
+    if provided != expected_key:
+        # Constant-time-ish check; both are short strings, hidden behind 404
+        return "Not found.", 404
+
+    token, err = auth.sign_in_with_password(email, password)
+    if err or not token:
+        app.logger.error("dev-login failed for %s: %s", email, err)
+        return f"Dev login failed: {err or 'unknown'}", 500
+
+    resp = make_response(redirect(url_for("dashboard")))
+    auth.set_jwt_cookie(resp, token)
     return resp
 
 

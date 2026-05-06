@@ -719,8 +719,8 @@
             </div>
 
             <div class="field">
-                <label for="submitter_email">Email <span style="color:#8a817a; font-weight:400;">(valgfri)</span></label>
-                <input type="email" id="submitter_email" name="submitter_email" placeholder="din@email.dk" autocomplete="email">
+                <label for="submitter_email">Email{% if not member_email_required %} <span style="color:#8a817a; font-weight:400;">(valgfri)</span>{% endif %}</label>
+                <input type="email" id="submitter_email" name="submitter_email" placeholder="din@email.dk" autocomplete="email"{% if member_email_required %} required{% endif %}>
                 <small style="display:block; margin-top:0.4rem; color:#8a817a; font-size:0.82rem;">Så får du bekræftelse og status-opdateringer.</small>
             </div>
 
@@ -858,21 +858,29 @@
         const CATEGORIES = {{ categories_json | safe }};
         const UDVALG = {{ udvalg_json | safe }};
 
-        // Populate udvalg dropdown
+        // Populate udvalg dropdown — or hide field entirely if forening has no udvalg
         const udvalgSelect = document.getElementById('udvalg');
         const udvalgAndet = document.getElementById('udvalg-andet');
-        UDVALG.forEach(u => {
-            const opt = document.createElement('option');
-            opt.value = u;
-            opt.textContent = u;
-            udvalgSelect.appendChild(opt);
-        });
-        udvalgSelect.addEventListener('change', () => {
-            const isAndet = udvalgSelect.value === 'Andet';
-            udvalgAndet.style.display = isAndet ? '' : 'none';
-            udvalgAndet.required = isAndet;
-            if (!isAndet) udvalgAndet.value = '';
-        });
+        const udvalgField = udvalgSelect.closest('.field');
+        if (UDVALG.length === 0) {
+            // No udvalg set up yet → hide field so member can submit
+            udvalgSelect.removeAttribute('required');
+            udvalgSelect.removeAttribute('name');
+            if (udvalgField) udvalgField.style.display = 'none';
+        } else {
+            UDVALG.forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u;
+                opt.textContent = u;
+                udvalgSelect.appendChild(opt);
+            });
+            udvalgSelect.addEventListener('change', () => {
+                const isAndet = udvalgSelect.value === 'Andet';
+                udvalgAndet.style.display = isAndet ? '' : 'none';
+                udvalgAndet.required = isAndet;
+                if (!isAndet) udvalgAndet.value = '';
+            });
+        }
 
         let selectedFiles = [];
         let scanResults = [];

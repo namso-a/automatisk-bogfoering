@@ -342,12 +342,14 @@ def upload_form(token):
     forening = db.forening_by_token(token)
     if not forening:
         return render_template("upload_invalid.html"), 404
+    udvalg_list = [u["navn"] for u in db.list_udvalg(forening["id"])]
     return render_template(
         "form.html",
         forening_name=forening["navn"],
         upload_token=token,
         categories_json=json.dumps([c["navn"] for c in db.list_categories(forening["id"])] or ["Andet"]),
-        udvalg_json=json.dumps([u["navn"] for u in db.list_udvalg(forening["id"])]),
+        udvalg_json=json.dumps(udvalg_list),
+        member_email_required=bool(forening.get("member_email_required", False)),
     )
 
 
@@ -523,6 +525,7 @@ def dashboard():
         forening_slug=forening["slug"],
         upload_token=forening["upload_token"],
         upload_disabled=forening.get("upload_disabled", False),
+        member_email_required=bool(forening.get("member_email_required", False)),
         upload_link_base=request.url_root.rstrip("/"),
         categories_json=json.dumps(cats),
         udvalg_json=json.dumps(udvalg_list),
@@ -617,6 +620,24 @@ def api_categories_add():
         return jsonify({"error": str(e)}), 400
 
 
+@app.route("/dashboard/api/categories/<cat_id>", methods=["PATCH"])
+@auth.require_forening_admin
+def api_categories_rename(cat_id):
+    data = request.get_json() or {}
+    navn = (data.get("navn") or "").strip()
+    if not navn:
+        return jsonify({"error": "Navn mangler."}), 400
+    if len(navn) > 60:
+        return jsonify({"error": "Navn er for langt (max 60 tegn)."}), 400
+    try:
+        cat = db.rename_category(g.forening["id"], cat_id, navn)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    if not cat:
+        return jsonify({"error": "Kategori ikke fundet."}), 404
+    return jsonify({"category": cat})
+
+
 @app.route("/dashboard/api/categories/<cat_id>", methods=["DELETE"])
 @auth.require_forening_admin
 def api_categories_delete(cat_id):
@@ -644,11 +665,59 @@ def api_udvalg_add():
         return jsonify({"error": str(e)}), 400
 
 
+@app.route("/dashboard/api/udvalg/<udvalg_id>", methods=["PATCH"])
+@auth.require_forening_admin
+def api_udvalg_rename(udvalg_id):
+    data = request.get_json() or {}
+    navn = (data.get("navn") or "").strip()
+    if not navn:
+        return jsonify({"error": "Navn mangler."}), 400
+    if len(navn) > 60:
+        return jsonify({"error": "Navn er for langt (max 60 tegn)."}), 400
+    try:
+        u = db.rename_udvalg(g.forening["id"], udvalg_id, navn)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    if not u:
+        return jsonify({"error": "Udvalg ikke fundet."}), 404
+    return jsonify({"udvalg": u})
+
+
 @app.route("/dashboard/api/udvalg/<udvalg_id>", methods=["DELETE"])
 @auth.require_forening_admin
 def api_udvalg_delete(udvalg_id):
     db.delete_udvalg(g.forening["id"], udvalg_id)
     return jsonify({"status": "ok"})
+
+
+@app.route("/dashboard/api/forening", methods=["PATCH"])
+@auth.require_forening_admin
+def api_forening_update():
+    data = request.get_json() or {}
+    updated = None
+
+    if "navn" in data:
+        navn = (data.get("navn") or "").strip()
+        if not navn:
+            return jsonify({"error": "Navn mangler."}), 400
+        if len(navn) > 120:
+            return jsonify({"error": "Navn er for langt (max 120 tegn)."}), 400
+        try:
+            updated = db.update_forening_name(g.forening["id"], navn)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 400
+
+    if "member_email_required" in data:
+        try:
+            updated = db.set_member_email_required(
+                g.forening["id"], bool(data["member_email_required"])
+            )
+        except Exception as e:
+            return jsonify({"error": str(e)}), 400
+
+    if not updated:
+        return jsonify({"error": "Ingen ændringer."}), 400
+    return jsonify({"forening": updated})
 
 
 @app.route("/dashboard/api/update-status", methods=["POST"])

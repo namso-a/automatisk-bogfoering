@@ -101,7 +101,14 @@ def forening_by_id(forening_id: str) -> dict | None:
 
 
 def create_forening(slug: str, navn: str, auth_user_id: str) -> dict:
-    """Create a new forening for a freshly-signed-up admin."""
+    """Create a new forening for a freshly-signed-up admin.
+
+    Also seeds default_udvalg and default_categories from config.json so the
+    new admin gets a working dropdown immediately on the upload form.
+    """
+    import json as _json
+    from pathlib import Path as _Path
+
     sb = service_client()
     # Ensure unique upload_token (collision-resistant; loop max 5x)
     for _ in range(5):
@@ -126,7 +133,41 @@ def create_forening(slug: str, navn: str, auth_user_id: str) -> dict:
         )
         .execute()
     )
-    return res.data[0]
+    forening = res.data[0]
+
+    # Seed default udvalg + categories so the upload form has options from day one
+    try:
+        cfg_path = _Path(__file__).resolve().parent.parent / "config.json"
+        cfg = _json.loads(cfg_path.read_text(encoding="utf-8"))
+        forening_id = forening["id"]
+        default_udvalg = cfg.get("default_udvalg", [])
+        default_categories = cfg.get("default_categories", [])
+        if default_udvalg:
+            sb.table("udvalg").insert(
+                [{"forening_id": forening_id, "navn": n, "sort_order": i} for i, n in enumerate(default_udvalg)]
+            ).execute()
+        if default_categories:
+            sb.table("kategorier").insert(
+                [{"forening_id": forening_id, "navn": n, "sort_order": i} for i, n in enumerate(default_categories)]
+            ).execute()
+    except Exception:
+        # Don't fail signup if seeding has an issue — admin can manage from Settings
+        pass
+
+    return forening
+
+
+def set_member_email_required(forening_id: str, required: bool) -> dict | None:
+    """Toggle whether the optional email field on /u/<token> is required for members."""
+    sb = service_client()
+    res = (
+        sb.table("foreninger")
+        .update({"member_email_required": required})
+        .eq("id", forening_id)
+        .execute()
+    )
+    rows = res.data or []
+    return rows[0] if rows else None
 
 
 def regenerate_upload_token(forening_id: str) -> str:
@@ -154,6 +195,19 @@ def set_upload_disabled(forening_id: str, disabled: bool) -> None:
     service_client().table("foreninger").update({"upload_disabled": disabled}).eq(
         "id", forening_id
     ).execute()
+
+
+def update_forening_name(forening_id: str, navn: str) -> dict | None:
+    """Rename the forening (display name only, slug stays permanent)."""
+    sb = service_client()
+    res = (
+        sb.table("foreninger")
+        .update({"navn": navn})
+        .eq("id", forening_id)
+        .execute()
+    )
+    rows = res.data or []
+    return rows[0] if rows else None
 
 
 # =============================================================================
@@ -351,6 +405,38 @@ def add_category(forening_id: str, navn: str) -> dict:
     return res.data[0]
 
 
+def rename_category(forening_id: str, category_id: str, new_navn: str) -> dict | None:
+    """Rename a category and cascade-update existing kvittering rows that
+    reference it by name (kvitteringer.kategori is stored as TEXT, not FK)."""
+    sb = service_client()
+    current = (
+        sb.table("kategorier")
+        .select("navn")
+        .eq("id", category_id)
+        .eq("forening_id", forening_id)
+        .limit(1)
+        .execute()
+    )
+    if not current.data:
+        return None
+    old_navn = current.data[0]["navn"]
+    if old_navn == new_navn:
+        return current.data[0]
+    res = (
+        sb.table("kategorier")
+        .update({"navn": new_navn})
+        .eq("id", category_id)
+        .eq("forening_id", forening_id)
+        .execute()
+    )
+    if res.data:
+        sb.table("kvitteringer").update({"kategori": new_navn}).eq(
+            "forening_id", forening_id
+        ).eq("kategori", old_navn).execute()
+        return res.data[0]
+    return None
+
+
 def delete_category(forening_id: str, category_id: str) -> None:
     service_client().table("kategorier").delete().eq("id", category_id).eq(
         "forening_id", forening_id
@@ -376,6 +462,37 @@ def add_udvalg(forening_id: str, navn: str) -> dict:
         sb.table("udvalg").insert({"forening_id": forening_id, "navn": navn}).execute()
     )
     return res.data[0]
+
+
+def rename_udvalg(forening_id: str, udvalg_id: str, new_navn: str) -> dict | None:
+    """Rename an udvalg and cascade to existing kvittering rows."""
+    sb = service_client()
+    current = (
+        sb.table("udvalg")
+        .select("navn")
+        .eq("id", udvalg_id)
+        .eq("forening_id", forening_id)
+        .limit(1)
+        .execute()
+    )
+    if not current.data:
+        return None
+    old_navn = current.data[0]["navn"]
+    if old_navn == new_navn:
+        return current.data[0]
+    res = (
+        sb.table("udvalg")
+        .update({"navn": new_navn})
+        .eq("id", udvalg_id)
+        .eq("forening_id", forening_id)
+        .execute()
+    )
+    if res.data:
+        sb.table("kvitteringer").update({"udvalg": new_navn}).eq(
+            "forening_id", forening_id
+        ).eq("udvalg", old_navn).execute()
+        return res.data[0]
+    return None
 
 
 def delete_udvalg(forening_id: str, udvalg_id: str) -> None:

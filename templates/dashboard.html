@@ -666,6 +666,200 @@
 
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+        /* ── Settings tab ── */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+            max-width: 720px;
+        }
+        .settings-card {
+            background: var(--card-bg);
+            border: 1px solid var(--warm);
+            border-radius: var(--radius);
+            padding: 1.5rem 1.5rem 1.25rem;
+        }
+        .settings-card h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin: 0 0 0.3rem;
+        }
+        .settings-card__desc {
+            color: var(--muted);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin: 0 0 1.1rem;
+        }
+        .settings-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+        }
+        .settings-form label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .settings-form input,
+        .settings-add input {
+            width: 100%;
+            padding: 0.6rem 0.85rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--ink);
+            background: var(--paper);
+            border: 1px solid var(--warm);
+            border-radius: 8px;
+            outline: none;
+            min-height: 40px;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .settings-form input:focus,
+        .settings-add input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(154, 111, 40, 0.12);
+        }
+        .settings-form .btn { align-self: flex-start; margin-top: 0.3rem; }
+
+        .settings-toggle {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding-top: 1.25rem;
+            margin-top: 1.25rem;
+            border-top: 1px solid var(--warm);
+        }
+        .settings-toggle__text { flex: 1; }
+        .settings-toggle__text strong {
+            display: block;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--ink);
+            margin-bottom: 0.2rem;
+        }
+        .settings-toggle__text span {
+            font-size: 0.84rem;
+            color: var(--muted);
+            line-height: 1.5;
+            display: block;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .switch__slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: var(--warm-dark);
+            border-radius: 26px;
+            transition: background 0.18s;
+        }
+        .switch__slider::before {
+            content: '';
+            position: absolute;
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            top: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.18s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+        }
+        .switch input:checked + .switch__slider { background: var(--accent); }
+        .switch input:checked + .switch__slider::before { transform: translateX(20px); }
+        .switch input:disabled + .switch__slider { opacity: 0.5; cursor: not-allowed; }
+        .settings-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .settings-list-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.5rem 0.4rem 0.85rem;
+            background: var(--paper);
+            border: 1px solid var(--warm);
+            border-radius: 8px;
+        }
+        .settings-list-item input {
+            flex: 1;
+            min-width: 0;
+            padding: 0.4rem 0.55rem;
+            font-family: inherit;
+            font-size: 0.92rem;
+            color: var(--ink);
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            outline: none;
+            transition: background 0.15s, border-color 0.15s;
+            min-height: 32px;
+        }
+        .settings-list-item input:hover { background: rgba(0,0,0,0.02); }
+        .settings-list-item input:focus {
+            background: #fff;
+            border-color: var(--accent);
+        }
+        .settings-list-item input.dirty {
+            background: #fef9ec;
+            border-color: #d4b66a;
+        }
+        .settings-list-item .icon-btn {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 0.85rem;
+            transition: color 0.15s, background 0.15s, border-color 0.15s;
+        }
+        .settings-list-item .icon-btn:hover {
+            color: var(--accent);
+            background: var(--card-bg);
+            border-color: var(--warm);
+        }
+        .settings-list-item .icon-btn--danger:hover { color: #b33; border-color: #e8c0c0; }
+        .settings-list-item .icon-btn--save { color: var(--accent); }
+        .settings-list-item .icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .settings-empty {
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.88rem;
+            padding: 0.85rem;
+            font-style: italic;
+        }
+        .settings-add {
+            display: flex;
+            gap: 0.5rem;
+            align-items: stretch;
+        }
+        .settings-add input { flex: 1; }
+        .settings-add .btn { white-space: nowrap; }
+        @media (min-width: 768px) {
+            .settings-grid { grid-template-columns: 1fr 1fr; }
+            .settings-card:first-child { grid-column: 1 / -1; }
+        }
+
         /* ── Export tab ── */
         .export-card {
             background: var(--card-bg);
@@ -915,6 +1109,7 @@
         <button class="tab-btn active" data-tab="oversigt">Oversigt</button>
         <button class="tab-btn" data-tab="udgifter">Udgifter</button>
         <button class="tab-btn" data-tab="eksport">Eksport</button>
+        <button class="tab-btn" data-tab="indstillinger">Indstillinger</button>
     </nav>
 
     <!-- Loading state -->
@@ -1016,6 +1211,52 @@
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink:0"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/></svg>
                 Download CSV
             </button>
+        </div>
+    </div>
+
+    <!-- Tab: Indstillinger -->
+    <div id="tab-indstillinger" class="tab-panel" style="display:none;">
+        <div class="settings-grid">
+            <section class="settings-card">
+                <h2>Foreningens navn</h2>
+                <p class="settings-card__desc">Vises i dashboardet og øverst på upload-siden, som medlemmer ser.</p>
+                <form class="settings-form" id="formForeningName">
+                    <label for="setForeningNavn">Navn</label>
+                    <input type="text" id="setForeningNavn" maxlength="120" required value="{{ forening_name }}">
+                    <button type="submit" class="btn btn-primary">Gem</button>
+                </form>
+
+                <div class="settings-toggle">
+                    <div class="settings-toggle__text">
+                        <strong>Kræv email af medlemmer ved upload</strong>
+                        <span>Når slået til, skal medlemmer angive email for at uploade en kvittering. De får så automatisk besked om godkendelse og udbetaling.</span>
+                    </div>
+                    <label class="switch" title="Toggle email required">
+                        <input type="checkbox" id="toggleEmailRequired" {% if member_email_required %}checked{% endif %}>
+                        <span class="switch__slider"></span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="settings-card">
+                <h2>Udvalg</h2>
+                <p class="settings-card__desc">Vises som dropdown når et medlem indsender en kvittering. Omdøbning opdaterer også eksisterende kvitteringer.</p>
+                <ul class="settings-list" id="settingsUdvalgList"><li class="settings-empty">Henter …</li></ul>
+                <form class="settings-add" id="formAddUdvalg">
+                    <input type="text" id="newUdvalgNavn" placeholder="Tilføj udvalg" maxlength="60" required>
+                    <button type="submit" class="btn btn-secondary">+ Tilføj</button>
+                </form>
+            </section>
+
+            <section class="settings-card">
+                <h2>Kategorier</h2>
+                <p class="settings-card__desc">AI'en vælger kategori automatisk. Listen her er bare hvad I kan vælge fra. Omdøbning opdaterer også eksisterende kvitteringer.</p>
+                <ul class="settings-list" id="settingsKategoriList"><li class="settings-empty">Henter …</li></ul>
+                <form class="settings-add" id="formAddKategori">
+                    <input type="text" id="newKategoriNavn" placeholder="Tilføj kategori" maxlength="60" required>
+                    <button type="submit" class="btn btn-secondary">+ Tilføj</button>
+                </form>
+            </section>
         </div>
     </div>
 
@@ -1893,6 +2134,244 @@
                 alert('Fejl: ' + e.message);
                 pauseBtn.disabled = false;
             }
+        });
+    }
+}());
+</script>
+
+<!-- Settings tab handlers -->
+<script>
+(function () {
+    let loaded = false;
+    let udvalgItems = [];
+    let kategoriItems = [];
+
+    function escapeText(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+    function showToast(msg, ok) {
+        const el = document.getElementById('toast');
+        if (!el) return alert(msg);
+        el.textContent = msg;
+        el.className = 'show ' + (ok ? 'toast-ok' : 'toast-err');
+        clearTimeout(el._t);
+        el._t = setTimeout(() => { el.className = ''; }, 3000);
+    }
+
+    async function loadAll() {
+        const [uRes, kRes] = await Promise.all([
+            fetch('/dashboard/api/udvalg'),
+            fetch('/dashboard/api/categories'),
+        ]);
+        const u = await uRes.json();
+        const k = await kRes.json();
+        udvalgItems = u.udvalg || [];
+        kategoriItems = k.categories || [];
+        renderList('settingsUdvalgList', udvalgItems, '/dashboard/api/udvalg');
+        renderList('settingsKategoriList', kategoriItems, '/dashboard/api/categories');
+    }
+
+    function renderList(containerId, items, baseUrl) {
+        const ul = document.getElementById(containerId);
+        if (!ul) return;
+        ul.replaceChildren();
+        if (items.length === 0) {
+            const li = document.createElement('li');
+            li.className = 'settings-empty';
+            li.textContent = 'Ingen tilføjet endnu.';
+            ul.appendChild(li);
+            return;
+        }
+        items.forEach(item => ul.appendChild(buildItem(item, baseUrl)));
+    }
+
+    function buildItem(item, baseUrl) {
+        const li = document.createElement('li');
+        li.className = 'settings-list-item';
+        li.dataset.id = item.id;
+        li.dataset.original = item.navn;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = item.navn;
+        input.maxLength = 60;
+
+        const saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'icon-btn icon-btn--save';
+        saveBtn.title = 'Gem omdøbning';
+        saveBtn.textContent = '✓';
+        saveBtn.style.display = 'none';
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'icon-btn icon-btn--danger';
+        delBtn.title = 'Slet';
+        delBtn.textContent = '🗑';
+
+        input.addEventListener('input', () => {
+            const dirty = input.value.trim() !== li.dataset.original;
+            input.classList.toggle('dirty', dirty);
+            saveBtn.style.display = dirty ? '' : 'none';
+            delBtn.style.display = dirty ? 'none' : '';
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && saveBtn.style.display !== 'none') {
+                e.preventDefault();
+                saveBtn.click();
+            } else if (e.key === 'Escape') {
+                input.value = li.dataset.original;
+                input.dispatchEvent(new Event('input'));
+                input.blur();
+            }
+        });
+
+        saveBtn.addEventListener('click', async () => {
+            const newName = input.value.trim();
+            if (!newName) return;
+            saveBtn.disabled = true;
+            try {
+                const r = await fetch(`${baseUrl}/${encodeURIComponent(item.id)}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ navn: newName }),
+                });
+                const j = await r.json();
+                if (!r.ok) throw new Error(j.error || 'HTTP ' + r.status);
+                li.dataset.original = newName;
+                input.classList.remove('dirty');
+                saveBtn.style.display = 'none';
+                delBtn.style.display = '';
+                showToast('Omdøbt — opdaterede også eksisterende kvitteringer.', true);
+            } catch (e) {
+                showToast('Fejl: ' + e.message, false);
+            } finally {
+                saveBtn.disabled = false;
+            }
+        });
+
+        delBtn.addEventListener('click', async () => {
+            if (!confirm(`Slet "${li.dataset.original}"?\n\nEksisterende kvitteringer beholder navnet, men det vil ikke længere kunne vælges.`)) return;
+            delBtn.disabled = true;
+            try {
+                const r = await fetch(`${baseUrl}/${encodeURIComponent(item.id)}`, { method: 'DELETE' });
+                if (!r.ok) {
+                    const j = await r.json().catch(() => ({}));
+                    throw new Error(j.error || 'HTTP ' + r.status);
+                }
+                li.remove();
+                showToast('Slettet.', true);
+            } catch (e) {
+                showToast('Fejl: ' + e.message, false);
+                delBtn.disabled = false;
+            }
+        });
+
+        li.appendChild(input);
+        li.appendChild(saveBtn);
+        li.appendChild(delBtn);
+        return li;
+    }
+
+    async function addItem(inputEl, baseUrl, listId, items) {
+        const navn = inputEl.value.trim();
+        if (!navn) return;
+        try {
+            const r = await fetch(baseUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ navn }),
+            });
+            const j = await r.json();
+            if (!r.ok) throw new Error(j.error || 'HTTP ' + r.status);
+            const created = j.category || j.udvalg;
+            items.push(created);
+            renderList(listId, items, baseUrl);
+            inputEl.value = '';
+            showToast('Tilføjet.', true);
+        } catch (e) {
+            showToast('Fejl: ' + e.message, false);
+        }
+    }
+
+    // Hook tab activation — lazy-load when "Indstillinger" tab is clicked
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (btn.dataset.tab === 'indstillinger' && !loaded) {
+                loaded = true;
+                loadAll();
+            }
+        });
+    });
+
+    // Forening name form
+    const formForening = document.getElementById('formForeningName');
+    if (formForening) {
+        formForening.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const navn = document.getElementById('setForeningNavn').value.trim();
+            if (!navn) return;
+            const btn = formForening.querySelector('button');
+            btn.disabled = true;
+            try {
+                const r = await fetch('/dashboard/api/forening', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ navn }),
+                });
+                const j = await r.json();
+                if (!r.ok) throw new Error(j.error || 'HTTP ' + r.status);
+                // Update header text + upload-card title where forening name appears
+                const header = document.querySelector('.header-left p');
+                if (header) header.textContent = `${navn} · kvitteringsoversigt`;
+                showToast('Foreningens navn er opdateret.', true);
+            } catch (err) {
+                showToast('Fejl: ' + err.message, false);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    }
+
+    const emailToggle = document.getElementById('toggleEmailRequired');
+    if (emailToggle) {
+        emailToggle.addEventListener('change', async () => {
+            const required = emailToggle.checked;
+            emailToggle.disabled = true;
+            try {
+                const r = await fetch('/dashboard/api/forening', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ member_email_required: required }),
+                });
+                const j = await r.json();
+                if (!r.ok) throw new Error(j.error || 'HTTP ' + r.status);
+                showToast(required
+                    ? 'Email er nu påkrævet for medlemmer.'
+                    : 'Email er nu valgfri for medlemmer.', true);
+            } catch (e) {
+                emailToggle.checked = !required;  // rollback
+                showToast('Fejl: ' + e.message, false);
+            } finally {
+                emailToggle.disabled = false;
+            }
+        });
+    }
+
+    const formAddUdvalg = document.getElementById('formAddUdvalg');
+    if (formAddUdvalg) {
+        formAddUdvalg.addEventListener('submit', (e) => {
+            e.preventDefault();
+            addItem(document.getElementById('newUdvalgNavn'), '/dashboard/api/udvalg', 'settingsUdvalgList', udvalgItems);
+        });
+    }
+    const formAddKategori = document.getElementById('formAddKategori');
+    if (formAddKategori) {
+        formAddKategori.addEventListener('submit', (e) => {
+            e.preventDefault();
+            addItem(document.getElementById('newKategoriNavn'), '/dashboard/api/categories', 'settingsKategoriList', kategoriItems);
         });
     }
 }());

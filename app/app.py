@@ -38,6 +38,7 @@ import os
 import re
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
@@ -537,48 +538,66 @@ def upload_scan(token):
         file.save(str(temp_path))
         saved.append((temp_path, temp_id, file.filename, ext))
 
-    def generate():
+    def process_one(idx, temp_path, temp_id, original_name, ext):
         from tools.ocr_receipt import extract_receipt_data
-
-        for i, (temp_path, temp_id, original_name, ext) in enumerate(saved):
-            try:
-                yield json.dumps({
-                    "index": i,
-                    "step": "ocr",
-                    "message": f"Scanner kvittering {i + 1} af {len(saved)}...",
-                }) + "\n"
-                receipt_data = extract_receipt_data(str(temp_path))
-                receipt_data = validate_ocr_result(receipt_data)
-                yield json.dumps({
-                    "index": i,
-                    "status": "ok",
-                    "receipt": receipt_data,
-                    "temp_id": temp_id,
-                    "filename": original_name,
-                }) + "\n"
-            except Exception as e:
-                app.logger.error("Scan fejl for %s: %s", original_name, e)
-                if temp_path.exists():
+        try:
+            data = extract_receipt_data(str(temp_path))
+            data = validate_ocr_result(data)
+            return {
+                "index": idx,
+                "status": "ok",
+                "receipt": data,
+                "temp_id": temp_id,
+                "filename": original_name,
+            }
+        except Exception as e:
+            app.logger.error("Scan fejl for %s: %s", original_name, e)
+            if temp_path.exists():
+                try:
                     temp_path.unlink()
-                # Translate raw upstream errors to friendly Danish without
-                # leaking API URLs or keys to the client.
-                err_str = str(e)
-                if "503" in err_str or "Service Unavailable" in err_str:
-                    friendly = "OCR-tjenesten er midlertidigt overbelastet. Prøv igen om et øjeblik."
-                elif "429" in err_str or "rate" in err_str.lower():
-                    friendly = "Vi har ramt timens grænse på OCR-tjenesten. Prøv igen om lidt."
-                elif "timeout" in err_str.lower():
-                    friendly = "OCR-tjenesten svarede ikke i tide. Prøv igen."
-                elif "generativelanguage.googleapis.com" in err_str:
-                    friendly = "OCR-tjenesten fejlede. Prøv igen om lidt."
-                else:
-                    friendly = "Kunne ikke læse kvitteringen automatisk. Prøv igen, eller indsend uden auto-data."
-                yield json.dumps({
-                    "index": i,
-                    "status": "error",
-                    "error": friendly,
-                    "filename": original_name,
-                }) + "\n"
+                except OSError:
+                    pass
+            err_str = str(e)
+            # Order matters: PDF check must come before the generic fallback;
+            # 503/429/timeout are transient infra; PDF is a content-type issue.
+            if "PDF" in err_str:
+                friendly = "PDF understøttes ikke endnu. Tag et foto af kvitteringen i stedet."
+            elif "503" in err_str or "Service Unavailable" in err_str:
+                friendly = "OCR-tjenesten er midlertidigt overbelastet. Prøv igen om et øjeblik."
+            elif "429" in err_str or "rate" in err_str.lower():
+                friendly = "Vi har ramt timens grænse på OCR-tjenesten. Prøv igen om lidt."
+            elif "timeout" in err_str.lower():
+                friendly = "OCR-tjenesten svarede ikke i tide. Prøv igen."
+            elif "groq.com" in err_str or "generativelanguage" in err_str:
+                friendly = "OCR-tjenesten fejlede. Prøv igen om lidt."
+            else:
+                friendly = "Kunne ikke læse kvitteringen automatisk. Prøv igen, eller indsend uden auto-data."
+            return {
+                "index": idx,
+                "status": "error",
+                "error": friendly,
+                "filename": original_name,
+            }
+
+    def generate():
+        # Concurrency=5 keeps us under Groq's 30 RPM with safety margin and
+        # comfortably under Render's 100s request timeout for typical batch
+        # sizes (≤50 receipts).
+        with ThreadPoolExecutor(max_workers=5) as ex:
+            futures = [
+                ex.submit(process_one, i, *t)
+                for i, t in enumerate(saved)
+            ]
+            yield json.dumps({"step": "starting", "count": len(saved)}) + "\n"
+            for fut in as_completed(futures):
+                try:
+                    result = fut.result()
+                except Exception as e:
+                    # Should not happen — process_one catches everything —
+                    # but defensive in case of pool/system failure.
+                    app.logger.error("ThreadPoolExecutor unexpected error: %s", e)
+                    continue
+                yield json.dumps(result) + "\n"
 
     return Response(stream_with_context(generate()), mimetype="text/plain")
 

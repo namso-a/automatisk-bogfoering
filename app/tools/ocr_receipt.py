@@ -13,7 +13,6 @@ import base64
 import json
 import os
 import sys
-import threading
 import time
 from io import BytesIO
 from pathlib import Path
@@ -31,25 +30,12 @@ except ImportError:
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
 
-# Groq free tier: 30 RPM = one every 2 seconds. Be slightly more conservative
-# to absorb retry traffic and leave headroom for concurrent uploads.
-_groq_lock = threading.Lock()
-_last_call_time = 0.0
-_MIN_INTERVAL = 2.5
-
+# Free tier is 30 RPM. We let Groq's own rate-limiter do the bookkeeping —
+# any 429 comes back with a retry-after header which the loop below honors.
+# A blocking client-side throttle would serialize concurrent callers and
+# defeat the parallel-OCR pipeline in app.py.
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
-
-
-def _throttle():
-    """Ensure minimum interval between Groq API calls."""
-    global _last_call_time
-    with _groq_lock:
-        now = time.time()
-        wait = _MIN_INTERVAL - (now - _last_call_time)
-        if wait > 0:
-            time.sleep(wait)
-        _last_call_time = time.time()
 
 
 def _resize_image(image_path: str, max_dim: int = 1568) -> tuple[str, str]:
@@ -156,7 +142,6 @@ def extract_receipt_data(image_path: str, categories: list[str] | None = None) -
     resp = None
     max_attempts = 5
     for attempt in range(max_attempts):
-        _throttle()
         try:
             resp = requests.post(GROQ_API_URL, json=payload, headers=headers, timeout=60)
         except requests.exceptions.RequestException as e:

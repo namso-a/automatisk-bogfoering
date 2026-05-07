@@ -38,6 +38,36 @@ GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
 
+def _read_pdf_first_page(pdf_path: str, max_dim: int = 1568) -> tuple[str, str]:
+    """Render first page of a PDF to JPEG and return (base64, "image/jpeg").
+
+    Llama 4 Scout doesn't accept PDFs natively, so we rasterize page 1 at
+    200 DPI and run it through the same image pipeline as photo uploads.
+    For receipts/invoices the relevant fields (date, amount, vendor) are
+    almost always on the first page; multi-page handling is out of scope.
+    """
+    import fitz  # PyMuPDF — pure-python wheels, no system deps
+    doc = fitz.open(pdf_path)
+    try:
+        if doc.page_count == 0:
+            raise ValueError("PDF er tom — ingen sider at læse.")
+        page = doc.load_page(0)
+        # 200 DPI ≈ 2.78× scale (PDF native is 72 DPI). Crisp enough for
+        # OCR on typical kvittering text.
+        pix = page.get_pixmap(matrix=fitz.Matrix(200 / 72, 200 / 72), alpha=False)
+        img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+    finally:
+        doc.close()
+
+    w, h = img.size
+    if max(w, h) > max_dim:
+        scale = max_dim / max(w, h)
+        img = img.resize((int(w * scale), int(h * scale)), Image.LANCZOS)
+    buf = BytesIO()
+    img.save(buf, format="JPEG", quality=85, optimize=True)
+    return base64.standard_b64encode(buf.getvalue()).decode("utf-8"), "image/jpeg"
+
+
 def _resize_image(image_path: str, max_dim: int = 1568) -> tuple[str, str]:
     """Resize image to max dimension and return (base64_data, mime_type)."""
     img = Image.open(image_path)
@@ -90,13 +120,9 @@ def extract_receipt_data(image_path: str, categories: list[str] | None = None) -
     category_list = ", ".join(categories)
 
     if Path(image_path).suffix.lower() == ".pdf":
-        # Llama 4 Scout takes images, not PDFs. Reject with a clear signal —
-        # /u/<token>/scan translates this into a friendly Danish message.
-        raise ValueError(
-            "PDF understøttes ikke endnu. Tag et foto af kvitteringen i stedet."
-        )
-
-    b64_data, mime_type = _resize_image(image_path)
+        b64_data, mime_type = _read_pdf_first_page(image_path)
+    else:
+        b64_data, mime_type = _resize_image(image_path)
     data_url = f"data:{mime_type};base64,{b64_data}"
 
     api_key = os.environ.get("GROQ_API_KEY", "")

@@ -4,6 +4,7 @@ requests>=2.31
 python-dotenv>=1.0
 Pillow>=10.0
 pillow-heif>=0.18
+pymupdf>=1.24
 supabase>=2.0
 flask-limiter>=3.5
 PyJWT[crypto]>=2.8

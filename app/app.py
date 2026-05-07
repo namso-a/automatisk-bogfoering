@@ -561,7 +561,7 @@ def upload_scan(token):
             # Order matters: PDF check must come before the generic fallback;
             # 503/429/timeout are transient infra; PDF is a content-type issue.
             if "PDF" in err_str:
-                friendly = "PDF understøttes ikke endnu. Tag et foto af kvitteringen i stedet."
+                friendly = "Kunne ikke læse PDF'en. Den kan være beskyttet, beskadiget eller scannet uden tekst — prøv at tage et foto af kvitteringen i stedet."
             elif "503" in err_str or "Service Unavailable" in err_str:
                 friendly = "OCR-tjenesten er midlertidigt overbelastet. Prøv igen om et øjeblik."
             elif "429" in err_str or "rate" in err_str.lower():

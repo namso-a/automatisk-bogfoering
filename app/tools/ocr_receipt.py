@@ -38,13 +38,17 @@ GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
 
-def _read_pdf_first_page(pdf_path: str, max_dim: int = 1568) -> tuple[str, str]:
+def _read_pdf_first_page(pdf_path: str, max_dim: int = 1200) -> tuple[str, str]:
     """Render first page of a PDF to JPEG and return (base64, "image/jpeg").
 
     Llama 4 Scout doesn't accept PDFs natively, so we rasterize page 1 at
-    200 DPI and run it through the same image pipeline as photo uploads.
+    150 DPI and run it through the same image pipeline as photo uploads.
     For receipts/invoices the relevant fields (date, amount, vendor) are
     almost always on the first page; multi-page handling is out of scope.
+
+    150 DPI keeps a 4-MB-or-less bitmap in memory per worker — important on
+    Render free tier (512 MB cap, was hitting SIGKILL at 200 DPI ×
+    5 concurrent).
     """
     import fitz  # PyMuPDF — pure-python wheels, no system deps
     doc = fitz.open(pdf_path)
@@ -52,9 +56,9 @@ def _read_pdf_first_page(pdf_path: str, max_dim: int = 1568) -> tuple[str, str]:
         if doc.page_count == 0:
             raise ValueError("PDF er tom — ingen sider at læse.")
         page = doc.load_page(0)
-        # 200 DPI ≈ 2.78× scale (PDF native is 72 DPI). Crisp enough for
-        # OCR on typical kvittering text.
-        pix = page.get_pixmap(matrix=fitz.Matrix(200 / 72, 200 / 72), alpha=False)
+        # 150 DPI = ~2.08× the PDF native 72 DPI. Crisp enough for OCR on
+        # typical kvittering / faktura text without exploding RAM.
+        pix = page.get_pixmap(matrix=fitz.Matrix(150 / 72, 150 / 72), alpha=False)
         img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
     finally:
         doc.close()
@@ -68,7 +72,7 @@ def _read_pdf_first_page(pdf_path: str, max_dim: int = 1568) -> tuple[str, str]:
     return base64.standard_b64encode(buf.getvalue()).decode("utf-8"), "image/jpeg"
 
 
-def _resize_image(image_path: str, max_dim: int = 1568) -> tuple[str, str]:
+def _resize_image(image_path: str, max_dim: int = 1200) -> tuple[str, str]:
     """Resize image to max dimension and return (base64_data, mime_type)."""
     img = Image.open(image_path)
 

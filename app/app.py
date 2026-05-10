@@ -528,6 +528,17 @@ def upload_scan(token):
     if not files:
         return jsonify({"error": "Vedhæft venligst mindst én kvittering."}), 400
 
+    # Cap per-batch size to keep total request time + RAM under Render's
+    # request timeout (100s) and memory cap (512 MB).
+    MAX_BATCH = 20
+    if len(files) > MAX_BATCH:
+        return jsonify({
+            "error": (
+                f"Du har valgt {len(files)} kvitteringer. "
+                f"Maks {MAX_BATCH} per gang — del op i flere uploads så de når i mål."
+            )
+        }), 400
+
     cleanup_old_temp_files()
 
     saved = []
@@ -539,6 +550,7 @@ def upload_scan(token):
         saved.append((temp_path, temp_id, file.filename, ext))
 
     def process_one(idx, temp_path, temp_id, original_name, ext):
+        import gc
         from tools.ocr_receipt import extract_receipt_data
         try:
             data = extract_receipt_data(str(temp_path))
@@ -578,12 +590,16 @@ def upload_scan(token):
                 "error": friendly,
                 "filename": original_name,
             }
+        finally:
+            # Free PIL Image / fitz Pixmap memory between receipts so the
+            # worker doesn't accumulate bitmaps and OOM on Render's 512 MB cap.
+            gc.collect()
 
     def generate():
-        # Concurrency=5 keeps us under Groq's 30 RPM with safety margin and
-        # comfortably under Render's 100s request timeout for typical batch
-        # sizes (≤50 receipts).
-        with ThreadPoolExecutor(max_workers=5) as ex:
+        # Concurrency=3 (down from 5) keeps RAM usage well under Render free
+        # tier's 512 MB cap — previous SIGKILLs were caused by 5 concurrent
+        # PDF/image bitmaps in memory at once.
+        with ThreadPoolExecutor(max_workers=3) as ex:
             futures = [
                 ex.submit(process_one, i, *t)
                 for i, t in enumerate(saved)

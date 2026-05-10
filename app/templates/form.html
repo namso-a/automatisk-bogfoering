@@ -408,6 +408,32 @@
 
         .progress-text.visible { display: block; }
 
+        /* Scan progress bar — visual feedback while OCR runs */
+        .scan-progress {
+            display: none;
+            width: 100%;
+            max-width: 360px;
+            margin: 0.75rem auto 0;
+            height: 4px;
+            background: rgba(26, 22, 18, 0.06);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .scan-progress.visible { display: block; }
+        .scan-progress__fill {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, var(--accent) 0%, #b88a3e 50%, var(--accent) 100%);
+            background-size: 200% 100%;
+            border-radius: 2px;
+            transition: width 0.18s ease-out;
+            animation: scan-shimmer 1.8s linear infinite;
+        }
+        @keyframes scan-shimmer {
+            from { background-position: 200% 0; }
+            to { background-position: -200% 0; }
+        }
+
         /* Success message */
         .success {
             display: none;
@@ -821,6 +847,9 @@
         <div class="submit-bar" id="submit-bar">
             <div class="submit-bar-inner">
                 <button type="submit" form="receipt-form" class="submit-btn" id="submit-btn">Send kvittering</button>
+                <div class="scan-progress" id="scan-progress" aria-hidden="true">
+                    <div class="scan-progress__fill" id="scan-progress-fill"></div>
+                </div>
                 <div class="progress-text" id="progress-text"></div>
             </div>
         </div>
@@ -870,6 +899,46 @@
         const successText = document.getElementById('success-text');
         const ocrResults = document.getElementById('ocr-results');
         const progressText = document.getElementById('progress-text');
+        const scanProgress = document.getElementById('scan-progress');
+        const scanProgressFill = document.getElementById('scan-progress-fill');
+
+        // Hybrid time-based + real-completion progress bar.
+        // Fills asymptotically to ~90% so the bar always feels alive even
+        // when actual completions arrive in bursts; snaps to 100% on done.
+        const scanProg = {
+            pctFake: 0, pctReal: 0, total: 0, completed: 0, done: false, rafId: null,
+            start(n) {
+                this.total = n; this.completed = 0;
+                this.pctFake = 0; this.pctReal = 0; this.done = false;
+                scanProgress.classList.add('visible');
+                scanProgressFill.style.width = '0%';
+                cancelAnimationFrame(this.rafId);
+                this.rafId = requestAnimationFrame(() => this.tick());
+            },
+            bump() {
+                this.completed++;
+                this.pctReal = this.total > 0 ? (this.completed / this.total) * 90 : 0;
+            },
+            end() { this.done = true; },
+            tick() {
+                if (this.done) {
+                    const cur = parseFloat(scanProgressFill.style.width) || 0;
+                    const next = cur + (100 - cur) * 0.22;
+                    if (next >= 99.5) {
+                        scanProgressFill.style.width = '100%';
+                        setTimeout(() => scanProgress.classList.remove('visible'), 380);
+                        return;
+                    }
+                    scanProgressFill.style.width = next.toFixed(2) + '%';
+                } else {
+                    // Asymptotic to 90 — quick at start, slows as it approaches
+                    this.pctFake += (90 - this.pctFake) * 0.012;
+                    const target = Math.max(this.pctFake, this.pctReal);
+                    scanProgressFill.style.width = target.toFixed(2) + '%';
+                }
+                this.rafId = requestAnimationFrame(() => this.tick());
+            },
+        };
         const refundFields = document.getElementById('refund-fields');
         const phoneInput = document.getElementById('phone');
         const regInput = document.getElementById('reg_nr');
@@ -1224,8 +1293,10 @@
             }
 
             progressText.textContent = total > 1
-                ? `Scanner kvittering 1 af ${total}...`
+                ? `Scanner ${total} kvitteringer...`
                 : 'Scanner kvittering...';
+
+            scanProg.start(total);
 
             scanResults = [];
             let scanErrors = [];
@@ -1241,15 +1312,17 @@
                     await readNDJSON(res, (r) => {
                         if (r._parseError) {
                             scanErrors.push('Kunne ikke læse svar fra server');
-                        } else if (r.step) {
-                            progressText.textContent = r.message;
+                        } else if (r.step === 'starting') {
+                            // Server confirms batch — already started locally
                         } else if (r.status === 'ok') {
+                            scanProg.bump();
                             scanResults.push({
                                 temp_id: r.temp_id,
                                 receipt: r.receipt,
                                 filename: r.filename,
                             });
-                        } else {
+                        } else if (r.status === 'error') {
+                            scanProg.bump();
                             const fname = r.filename || `Kvittering ${(r.index || 0) + 1}`;
                             scanErrors.push(`${fname}: ${r.error || 'Ukendt fejl'}`);
                         }
@@ -1259,6 +1332,7 @@
                 scanErrors.push('Kunne ikke forbinde til serveren');
             }
 
+            scanProg.end();
             submitBtn.classList.remove('loading');
             submitBtn.disabled = false;
             progressText.classList.remove('visible');

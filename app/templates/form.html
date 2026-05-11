@@ -402,6 +402,14 @@
             border-radius: var(--radius);
             cursor: pointer;
             transition: background 0.2s, transform 0.1s;
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+        }
+
+        .submit-btn__label {
+            position: relative;
+            z-index: 1;
         }
 
         .submit-btn:hover { background: var(--accent-hover); }
@@ -414,9 +422,8 @@
             transform: none;
         }
 
-        /* Loading / progress state */
+        /* Spinner-mode loading (used by confirm-btn) */
         .submit-btn.loading {
-            position: relative;
             color: transparent;
         }
 
@@ -430,9 +437,35 @@
             border-top-color: #fff;
             border-radius: 50%;
             animation: spin 0.6s linear infinite;
+            z-index: 2;
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Scanning-mode loading: knappen ER progress-bar'en (submit-btn during OCR) */
+        .submit-btn.loading.scanning {
+            color: #fff;
+            background: rgba(196, 93, 62, 0.18);
+            cursor: progress;
+        }
+        .submit-btn.loading.scanning:disabled {
+            color: #fff;
+            background: rgba(196, 93, 62, 0.18);
+        }
+        .submit-btn.loading.scanning::after {
+            display: none;   /* skjul spinneren — fill-en er nu eneste indikator */
+        }
+        .submit-btn.loading.scanning::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            width: var(--scan-pct, 0%);
+            background: linear-gradient(90deg, var(--accent) 0%, #b88a3e 50%, var(--accent) 100%);
+            background-size: 200% 100%;
+            animation: scan-shimmer 1.8s linear infinite;
+            transition: width 0.22s ease-out;
+            z-index: 0;
+        }
 
         .progress-text {
             display: none;
@@ -444,27 +477,6 @@
 
         .progress-text.visible { display: block; }
 
-        /* Scan progress bar — visual feedback while OCR runs */
-        .scan-progress {
-            display: none;
-            width: 100%;
-            max-width: 360px;
-            margin: 0.75rem auto 0;
-            height: 4px;
-            background: rgba(26, 22, 18, 0.06);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        .scan-progress.visible { display: block; }
-        .scan-progress__fill {
-            height: 100%;
-            width: 0;
-            background: linear-gradient(90deg, var(--accent) 0%, #b88a3e 50%, var(--accent) 100%);
-            background-size: 200% 100%;
-            border-radius: 2px;
-            transition: width 0.18s ease-out;
-            animation: scan-shimmer 1.8s linear infinite;
-        }
         @keyframes scan-shimmer {
             from { background-position: 200% 0; }
             to { background-position: -200% 0; }
@@ -885,11 +897,9 @@
 
         <div class="submit-bar" id="submit-bar">
             <div class="submit-bar-inner">
-                <button type="submit" form="receipt-form" class="submit-btn" id="submit-btn">Send kvittering</button>
-                <div class="scan-progress" id="scan-progress" aria-hidden="true">
-                    <div class="scan-progress__fill" id="scan-progress-fill"></div>
-                </div>
-                <div class="progress-text" id="progress-text"></div>
+                <button type="submit" form="receipt-form" class="submit-btn" id="submit-btn">
+                    <span class="submit-btn__label">Send kvittering</span>
+                </button>
             </div>
         </div>
 
@@ -937,49 +947,47 @@
         const successDiv = document.getElementById('success');
         const successText = document.getElementById('success-text');
         const ocrResults = document.getElementById('ocr-results');
-        const progressText = document.getElementById('progress-text');
-        const scanProgress = document.getElementById('scan-progress');
-        const scanProgressFill = document.getElementById('scan-progress-fill');
+        const submitBtnLabel = submitBtn.querySelector('.submit-btn__label');
 
-        // Hybrid time-based + real-completion progress bar.
-        // Fills asymptotically to ~90% so the bar always feels alive even
-        // when actual completions arrive in bursts; snaps to 100% on done.
+        // Hybrid time-based + real-completion progress: the submit-btn itself
+        // is the bar. ::before fills based on --scan-pct CSS variable; the
+        // label inside .submit-btn__label flips text as receipts complete.
         const scanProg = {
             pctFake: 0, pctReal: 0, total: 0, completed: 0, done: false, rafId: null,
             start(n) {
                 this.total = n; this.completed = 0;
-                this.pctFake = 0; this.pctReal = 0; this.done = false;
-                scanProgress.classList.add('visible');
-                scanProgressFill.style.width = '0%';
+                this.pctFake = 5; this.pctReal = 0; this.done = false;
+                submitBtnLabel.textContent = n > 1
+                    ? `Scanner kvittering 1 af ${n}...`
+                    : 'Scanner kvittering...';
+                submitBtn.style.setProperty('--scan-pct', '5%');
                 cancelAnimationFrame(this.rafId);
                 this.rafId = requestAnimationFrame(() => this.tick());
             },
             bump() {
                 this.completed++;
                 this.pctReal = this.total > 0 ? (this.completed / this.total) * 90 : 0;
-                if (progressText && this.total > 1) {
-                    // Display the receipt currently being scanned (1-indexed),
-                    // clamped to total so the count doesn't overshoot on the final bump.
+                if (this.total > 1) {
+                    // 1-indexed display, clamped so the final bump doesn't overshoot.
                     const showing = Math.min(this.completed + 1, this.total);
-                    progressText.textContent = `Scanner kvittering ${showing} af ${this.total}...`;
+                    submitBtnLabel.textContent = `Scanner kvittering ${showing} af ${this.total}...`;
                 }
             },
             end() { this.done = true; },
             tick() {
                 if (this.done) {
-                    const cur = parseFloat(scanProgressFill.style.width) || 0;
+                    const cur = parseFloat(submitBtn.style.getPropertyValue('--scan-pct')) || 0;
                     const next = cur + (100 - cur) * 0.22;
                     if (next >= 99.5) {
-                        scanProgressFill.style.width = '100%';
-                        setTimeout(() => scanProgress.classList.remove('visible'), 380);
+                        submitBtn.style.setProperty('--scan-pct', '100%');
                         return;
                     }
-                    scanProgressFill.style.width = next.toFixed(2) + '%';
+                    submitBtn.style.setProperty('--scan-pct', next.toFixed(2) + '%');
                 } else {
                     // Asymptotic to 90 — quick at start, slows as it approaches
                     this.pctFake += (90 - this.pctFake) * 0.012;
                     const target = Math.max(this.pctFake, this.pctReal);
-                    scanProgressFill.style.width = target.toFixed(2) + '%';
+                    submitBtn.style.setProperty('--scan-pct', target.toFixed(2) + '%');
                 }
                 this.rafId = requestAnimationFrame(() => this.tick());
             },
@@ -1358,14 +1366,13 @@
             // Remember name for next visit
             localStorage.setItem('receipt_name', formMeta.name);
 
-            submitBtn.classList.add('loading');
+            submitBtn.classList.add('loading', 'scanning');
             submitBtn.disabled = true;
 
             const total = selectedFiles.length;
-            progressText.textContent = total > 1
+            submitBtnLabel.textContent = total > 1
                 ? `Komprimerer ${total} kvitteringer...`
                 : 'Komprimerer kvittering...';
-            progressText.classList.add('visible');
 
             // Compress all files and build FormData
             const formData = new FormData();
@@ -1373,10 +1380,6 @@
             for (let i = 0; i < total; i++) {
                 formData.append('receipt', await compressImage(selectedFiles[i]));
             }
-
-            progressText.textContent = total > 1
-                ? `Scanner kvittering 1 af ${total}...`
-                : 'Scanner kvittering...';
 
             scanProg.start(total);
 
@@ -1415,9 +1418,10 @@
             }
 
             scanProg.end();
-            submitBtn.classList.remove('loading');
+            submitBtn.classList.remove('loading', 'scanning');
             submitBtn.disabled = false;
-            progressText.classList.remove('visible');
+            submitBtn.style.removeProperty('--scan-pct');
+            submitBtnLabel.textContent = 'Send kvittering';
 
             if (scanResults.length > 0) {
                 showReview(scanErrors);

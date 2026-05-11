@@ -38,7 +38,6 @@ import os
 import re
 import time
 import uuid
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
@@ -528,9 +527,11 @@ def upload_scan(token):
     if not files:
         return jsonify({"error": "Vedhæft venligst mindst én kvittering."}), 400
 
-    # Cap per-batch size to keep total request time + RAM under Render's
-    # request timeout (100s) and memory cap (512 MB).
-    MAX_BATCH = 20
+    # Serial OCR mode: 15 × ~5s = ~75s, comfortable margin under Render's
+    # 100s request timeout. Previous concurrent attempts (3 workers) hit the
+    # 512 MB RAM cap and silently dropped receipts via SIGKILL — see plan
+    # mighty-exploring-pancake.md.
+    MAX_BATCH = 15
     if len(files) > MAX_BATCH:
         return jsonify({
             "error": (
@@ -596,24 +597,13 @@ def upload_scan(token):
             gc.collect()
 
     def generate():
-        # Concurrency=3 (down from 5) keeps RAM usage well under Render free
-        # tier's 512 MB cap — previous SIGKILLs were caused by 5 concurrent
-        # PDF/image bitmaps in memory at once.
-        with ThreadPoolExecutor(max_workers=3) as ex:
-            futures = [
-                ex.submit(process_one, i, *t)
-                for i, t in enumerate(saved)
-            ]
-            yield json.dumps({"step": "starting", "count": len(saved)}) + "\n"
-            for fut in as_completed(futures):
-                try:
-                    result = fut.result()
-                except Exception as e:
-                    # Should not happen — process_one catches everything —
-                    # but defensive in case of pool/system failure.
-                    app.logger.error("ThreadPoolExecutor unexpected error: %s", e)
-                    continue
-                yield json.dumps(result) + "\n"
+        # Serial: even concurrency=3 OOM'd on Render Free's 512 MB cap.
+        # Each yield resets gunicorn's worker timeout (set to 120s in Procfile)
+        # so the streaming response stays alive across the ~75s total scan.
+        yield json.dumps({"step": "starting", "count": len(saved)}) + "\n"
+        for idx, t in enumerate(saved):
+            result = process_one(idx, *t)
+            yield json.dumps(result) + "\n"
 
     return Response(stream_with_context(generate()), mimetype="text/plain")
 

@@ -918,6 +918,12 @@
             bump() {
                 this.completed++;
                 this.pctReal = this.total > 0 ? (this.completed / this.total) * 90 : 0;
+                if (progressText && this.total > 1) {
+                    // Display the receipt currently being scanned (1-indexed),
+                    // clamped to total so the count doesn't overshoot on the final bump.
+                    const showing = Math.min(this.completed + 1, this.total);
+                    progressText.textContent = `Scanner kvittering ${showing} af ${this.total}...`;
+                }
             },
             end() { this.done = true; },
             tick() {
@@ -1293,7 +1299,7 @@
             }
 
             progressText.textContent = total > 1
-                ? `Scanner ${total} kvitteringer...`
+                ? `Scanner kvittering 1 af ${total}...`
                 : 'Scanner kvittering...';
 
             scanProg.start(total);

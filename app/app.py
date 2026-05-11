@@ -605,7 +605,19 @@ def upload_scan(token):
             result = process_one(idx, *t)
             yield json.dumps(result) + "\n"
 
-    return Response(stream_with_context(generate()), mimetype="text/plain")
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/plain",
+        headers={
+            # Render's L7 proxy buffers responses by default — every NDJSON
+            # chunk would arrive at the browser only after the *entire* stream
+            # finished, so the per-receipt progress UI couldn't update during
+            # the scan. X-Accel-Buffering=no is the standard nginx-style
+            # opt-out and Render honors it.
+            "X-Accel-Buffering": "no",
+            "Cache-Control": "no-cache",
+        },
+    )
 
 
 @app.route("/u/<token>/confirm", methods=["POST"])
@@ -704,7 +716,19 @@ def upload_confirm(token):
                     except OSError:
                         pass
 
-    return Response(stream_with_context(generate()), mimetype="text/plain")
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/plain",
+        headers={
+            # Render's L7 proxy buffers responses by default — every NDJSON
+            # chunk would arrive at the browser only after the *entire* stream
+            # finished, so the per-receipt progress UI couldn't update during
+            # the scan. X-Accel-Buffering=no is the standard nginx-style
+            # opt-out and Render honors it.
+            "X-Accel-Buffering": "no",
+            "Cache-Control": "no-cache",
+        },
+    )
 
 
 # =============================================================================

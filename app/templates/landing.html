@@ -971,13 +971,19 @@
         }
 
         /* ── Dashboard preview section ── */
-        .dashboard-preview { padding: 4rem 0 5.5rem; }
-        .dashboard-preview .section-head { margin-bottom: 2.5rem; }
+        .dashboard-preview { padding: 3rem 0 4rem; }
+        .dashboard-preview .section-head { margin-bottom: 2rem; }
+        .dashboard-preview .section-head h2 {
+            /* mindre end andre section-h2 (3.2rem) — er en peek, ikke et brand-moment */
+            font-size: clamp(1.7rem, 3.2vw, 2.3rem);
+        }
+        .dashboard-preview .section-head p { font-size: 0.98rem; }
         .screenshot-frame {
-            max-width: 980px;
+            max-width: 860px;
+            max-height: 520px;
             margin: 0 auto;
             border-radius: 12px;
-            overflow: hidden;
+            overflow: hidden;             /* klipper bunden af screenshottet væk */
             background: #fff;
             border: 1px solid var(--border-strong);
             box-shadow:
@@ -1023,19 +1029,24 @@
 
         /* ── Card screenshots (Sådan virker det) ── */
         .card-screenshot {
+            display: block;
             width: 100%;
+            height: 180px;                /* fast højde — aspect-ratio CSS bliver overrulet
+                                              af HTML height-attr på nogle browsers, så hardcoded */
             margin-top: 1.5rem;
+            object-fit: cover;
+            object-position: center top;
             border-radius: 8px;
             border: 1px solid var(--border);
             box-shadow:
                 0 10px 24px -10px rgba(26, 22, 18, 0.18),
                 0 0 0 1px rgba(26, 22, 18, 0.03);
-            aspect-ratio: 4 / 3;
-            object-fit: cover;
-            object-position: top center;
-            display: block;
             background: var(--bg-soft);
         }
+        /* Per-card object-position så hvert crop viser meningsfuldt indhold */
+        .card-screenshot--mobile  { object-position: center 18%; }   /* upload-form mellem header og kvitterings-liste */
+        .card-screenshot--table   { object-position: center 30%; }   /* dashboard-udgifter: tabelrækker med beløb */
+        .card-screenshot--kpis    { object-position: center 70%; }   /* dashboard-oversigt: KPI-kort + charts */
 
         /* ── Scroll fade-in (subtil) ── */
         .reveal {
@@ -1235,19 +1246,19 @@
                 <div class="card-num">I. Upload</div>
                 <h3>Frivillig uploader</h3>
                 <p>Fra mobilen, uden at installere en app. Tager 10 sekunder. Alle i foreningen kan bruge samme upload-link.</p>
-                <img class="card-screenshot" src="{{ url_for('static', filename='img/landing/upload-mobile.jpg') }}" alt="Upload-formen på mobil" loading="lazy" width="390" height="293">
+                <img class="card-screenshot card-screenshot--mobile" src="{{ url_for('static', filename='img/landing/upload-mobile.jpg') }}" alt="Upload-formen på mobil" loading="lazy">
             </div>
             <div class="card">
                 <div class="card-num">II. AI</div>
                 <h3>AI læser alt</h3>
                 <p>Beløb, dato, butik, kategori, valuta. Frivillige bekræfter inden de trykker indsend.</p>
-                <img class="card-screenshot" src="{{ url_for('static', filename='img/landing/dashboard-udgifter.jpg') }}" alt="Auto-genkendte felter i tabel" loading="lazy" width="1280" height="960">
+                <img class="card-screenshot card-screenshot--table" src="{{ url_for('static', filename='img/landing/dashboard-udgifter.jpg') }}" alt="Auto-genkendte felter i tabel" loading="lazy">
             </div>
             <div class="card">
                 <div class="card-num">III. Dashboard</div>
                 <h3>Dashboardet viser alt</h3>
                 <p>Forbrug per udvalg, grafer over tid, godkend og udbetal med ét klik. Eksport til bogføring når I vil.</p>
-                <img class="card-screenshot" src="{{ url_for('static', filename='img/landing/dashboard-oversigt.jpg') }}" alt="Dashboard KPI-kort" loading="lazy" width="1280" height="960">
+                <img class="card-screenshot card-screenshot--kpis" src="{{ url_for('static', filename='img/landing/dashboard-oversigt.jpg') }}" alt="Dashboard KPI-kort" loading="lazy">
             </div>
         </div>
     </div>

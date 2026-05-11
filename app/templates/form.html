@@ -210,7 +210,11 @@
             background: #fff;
         }
 
-        .upload-area:hover, .upload-area.dragover {
+        /* Hover-affordance kun mens boksen er tom. Når filer er tilføjet
+           får hele kontaineren ellers et hover-highlight som får brugeren
+           til at tro de kan klikke overalt for at fjerne/tilføje. */
+        .upload-area:not(.has-files):hover,
+        .upload-area.dragover {
             border-color: var(--accent);
             background: rgba(196, 93, 62, 0.03);
         }
@@ -219,6 +223,7 @@
             border-style: solid;
             border-color: var(--accent);
             padding: 0.75rem 1rem;
+            cursor: default;
         }
 
         .upload-icon {
@@ -315,31 +320,52 @@
         }
 
         .file-remove {
-            background: none;
+            background: rgba(196, 93, 62, 0.08);
             border: none;
-            color: var(--muted);
+            color: var(--accent);
             cursor: pointer;
-            padding: 0.4rem;
-            font-size: 1.1rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 1.05rem;
             line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             flex-shrink: 0;
+            transition: background 0.15s, color 0.15s;
         }
 
-        .file-remove:hover { color: var(--accent); }
+        .file-remove:hover,
+        .file-remove:focus-visible {
+            background: var(--accent);
+            color: #fff;
+            outline: none;
+        }
 
         .upload-placeholder { display: block; }
         .has-files .upload-placeholder { display: none; }
 
         .add-more {
             display: none;
-            margin-top: 0.6rem;
+            margin-top: 0.75rem;
+            padding: 0.55rem 1rem;
             font-size: 0.85rem;
             color: var(--accent);
-            background: none;
-            border: none;
+            background: rgba(196, 93, 62, 0.06);
+            border: 1px solid rgba(196, 93, 62, 0.25);
+            border-radius: 999px;
             cursor: pointer;
             font-family: 'Inter', sans-serif;
             font-weight: 500;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .add-more:hover,
+        .add-more:focus-visible {
+            background: rgba(196, 93, 62, 0.12);
+            border-color: var(--accent);
+            outline: none;
         }
 
         .has-files .add-more { display: inline-block; }
@@ -588,14 +614,17 @@
         .has-files .upload-buttons { display: none; }
         .has-files .upload-placeholder { display: none; }
 
-        /* Duplicate warning */
+        /* Duplicate / limit warning */
         .duplicate-warn {
-            background: #fff8e6;
-            color: #7a6200;
-            padding: 0.6rem 0.85rem;
+            background: #fff4d9;
+            color: #6a4f00;
+            padding: 0.75rem 0.95rem;
             border-radius: 8px;
-            font-size: 0.8rem;
-            margin-top: 0.35rem;
+            border-left: 3px solid #d4a418;
+            font-size: 0.85rem;
+            line-height: 1.35;
+            margin-top: 0.5rem;
+            font-weight: 500;
         }
 
         /* ---- Review screen ---- */
@@ -1113,13 +1142,27 @@
         const MAX_FILES = 15;
 
         async function addFiles(newFiles) {
-            let duplicateFound = false;
-            let limitHit = false;
+            // Pre-filter: drop invalid types + name/size duplicates against the
+            // already-selected list. Hash-dedup runs after the cap check so we
+            // don't waste hashes on a batch we're about to reject wholesale.
+            const candidates = [];
             for (const f of newFiles) {
                 if (!isAllowedFile(f)) continue;
                 if (selectedFiles.some(s => s.name === f.name && s.size === f.size)) continue;
-                if (selectedFiles.length >= MAX_FILES) { limitHit = true; continue; }
+                candidates.push(f);
+            }
 
+            const remainingSlots = MAX_FILES - selectedFiles.length;
+            if (candidates.length > remainingSlots) {
+                // Reject the entire batch — partial acceptance silently drops files
+                // the user can't identify after the fact. Forcing them to pick fewer
+                // is the only honest behavior at the cap.
+                showLimitWarning(candidates.length, remainingSlots);
+                return;
+            }
+
+            let duplicateFound = false;
+            for (const f of candidates) {
                 const hash = await hashFile(f);
                 if (seenHashes.has(hash)) {
                     duplicateFound = true;
@@ -1132,21 +1175,22 @@
             if (duplicateFound) {
                 showDuplicateWarning();
             }
-            if (limitHit) {
-                showLimitWarning();
-            }
         }
 
-        function showLimitWarning() {
+        function showLimitWarning(attempted, remaining) {
             let warn = uploadArea.querySelector('.duplicate-warn.limit-warn');
             if (!warn) {
                 warn = document.createElement('div');
                 warn.className = 'duplicate-warn limit-warn';
-                warn.textContent = `Maks ${MAX_FILES} kvitteringer per upload — del op i flere uploads, så de når i mål.`;
                 uploadArea.appendChild(warn);
             }
+            if (remaining <= 0) {
+                warn.textContent = `Du har allerede ${MAX_FILES} kvitteringer — det er max. Fjern nogle for at tilføje andre.`;
+            } else {
+                warn.textContent = `Du valgte ${attempted} filer, men der er kun plads til ${remaining} mere (maks ${MAX_FILES} i alt). Ingen blev tilføjet — vælg færre og prøv igen.`;
+            }
             clearTimeout(warn._timer);
-            warn._timer = setTimeout(() => warn.remove(), 5000);
+            warn._timer = setTimeout(() => warn.remove(), 7000);
         }
 
         function showDuplicateWarning() {

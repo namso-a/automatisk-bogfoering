@@ -592,6 +592,62 @@
 
         .detail-field p.empty { color: var(--muted); font-style: italic; }
 
+        /* Udgifter toolbar (export inline) */
+        .udgifter-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.85rem;
+            flex-wrap: wrap;
+        }
+        .udgifter-count {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+        .udgifter-export {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        /* Inline-edit: clickable values + active input styling */
+        .detail-field--editable .editable-value {
+            cursor: pointer;
+            border-radius: 4px;
+            padding: 0.15rem 0.35rem;
+            margin: -0.15rem -0.35rem;
+            transition: background 0.12s, box-shadow 0.12s;
+        }
+        .detail-field--editable .editable-value:hover {
+            background: rgba(196, 93, 62, 0.06);
+        }
+        .detail-field--editable .editable-value:focus-visible {
+            outline: none;
+            background: rgba(196, 93, 62, 0.08);
+            box-shadow: 0 0 0 2px rgba(196, 93, 62, 0.25);
+        }
+        .detail-field--editable .editable-value .muted-hint {
+            color: var(--muted);
+            font-style: italic;
+            font-size: 0.85rem;
+        }
+        .inline-edit-input {
+            width: 100%;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--ink);
+            background: #fff;
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            padding: 0.32rem 0.5rem;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(196, 93, 62, 0.18);
+        }
+        textarea.inline-edit-input { resize: vertical; min-height: 2.4rem; }
+
         .detail-receipt {
             margin-top: 0.75rem;
         }
@@ -1084,8 +1140,60 @@
             .filter-bar { gap: 0.6rem; }
             .detail-grid { grid-template-columns: 1fr; gap: 0.85rem; }
             .detail-field p { font-size: 0.95rem; }
-            .table-wrap tbody td { padding: 0.7rem 0.75rem; font-size: 0.88rem; }
-            .table-wrap thead th { padding: 0.65rem 0.75rem; }
+
+            /* Udgifter-tabel → stacked cards på mobile.
+               Hver tr bliver et card med felt-labels via ::before. */
+            .table-wrap {
+                border: none;
+                background: transparent;
+                overflow: visible;
+            }
+            .table-wrap table,
+            .table-wrap thead,
+            .table-wrap tbody,
+            .table-wrap tr,
+            .table-wrap td { display: block; width: 100%; }
+            .table-wrap thead { display: none; }
+            .table-wrap tbody tr.data-row {
+                background: var(--card-bg);
+                border: 1px solid var(--warm);
+                border-radius: var(--radius);
+                margin-bottom: 0.65rem;
+                padding: 0.85rem 1rem 0.6rem;
+            }
+            .table-wrap tbody tr.data-row:hover,
+            .table-wrap tbody tr.data-row.expanded { background: var(--paper); }
+            .table-wrap tbody td {
+                border: none;
+                padding: 0.18rem 0;
+                font-size: 0.9rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 0.6rem;
+            }
+            .table-wrap tbody td::before {
+                content: attr(data-label);
+                font-size: 0.7rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                color: var(--muted);
+                flex: 0 0 auto;
+            }
+            .table-wrap tbody td:empty { display: none; }
+            /* Action-knap: skjul label, lad knappen være full-width */
+            .table-wrap tbody td[data-label=""] {
+                margin-top: 0.55rem;
+                padding-top: 0.55rem;
+                border-top: 1px dashed var(--warm);
+                display: block;
+            }
+            .table-wrap tbody td[data-label=""]::before { display: none; }
+            .table-wrap tbody td[data-label=""] .btn { width: 100%; }
+            /* Detail-row: ingen card-padding, vises som standard detail-panel */
+            .table-wrap tbody tr.detail-row { background: transparent; border: none; }
+            .table-wrap tbody tr.detail-row td { padding: 0; }
             #toast {
                 right: 1rem;
                 left: 1rem;
@@ -1298,7 +1406,6 @@
     <nav class="tab-nav">
         <button class="tab-btn active" data-tab="oversigt">Oversigt</button>
         <button class="tab-btn" data-tab="udgifter">Udgifter</button>
-        <button class="tab-btn" data-tab="eksport">Eksport</button>
         <button class="tab-btn" data-tab="indstillinger">Indstillinger</button>
     </nav>
 
@@ -1370,6 +1477,13 @@
 
     <!-- Tab: Udgifter -->
     <div id="tab-udgifter" class="tab-panel" style="display:none;">
+        <div class="udgifter-toolbar">
+            <span class="udgifter-count" id="exportCount">0 poster</span>
+            <a class="btn btn-secondary udgifter-export" href="/dashboard/api/export.xlsx" download>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink:0"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/></svg>
+                Eksportér til Excel
+            </a>
+        </div>
         <div class="table-wrap">
             <table id="udgifterTable">
                 <thead>
@@ -1389,20 +1503,6 @@
         </div>
     </div>
 
-    <!-- Tab: Eksport -->
-    <div id="tab-eksport" class="tab-panel" style="display:none;">
-        <div class="export-card">
-            <h2>Download data</h2>
-            <p>
-                Eksporter de aktuelt filtrerede kvitteringer som en CSV-fil.<br>
-                <strong id="exportCount">0 poster</strong> vil blive inkluderet.
-            </p>
-            <button class="btn btn-primary" id="btnDownloadCSV">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink:0"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/></svg>
-                Download CSV
-            </button>
-        </div>
-    </div>
 
     <!-- Tab: Indstillinger -->
     <div id="tab-indstillinger" class="tab-panel" style="display:none;">
@@ -1959,6 +2059,139 @@
         return `<div class="detail-field"><label>${escapeHTML(label)}</label>${v}</div>`;
     }
 
+    // Editable detail-field: klik på værdien → input → Enter/blur saver → Escape annullerer.
+    // opts: { type: 'text'|'date'|'number'|'textarea'|'select', options?: [{value,label}] }
+    function editableFieldHTML(label, key, value, rowNum, opts = {}) {
+        const safe = (value !== null && value !== undefined && String(value).trim() !== '') ? String(value) : '';
+        const display = safe
+            ? escapeHTML(safe)
+            : '<span class="muted-hint">— klik for at tilføje</span>';
+        const dataOpts = opts.options ? ` data-options='${escapeHTML(JSON.stringify(opts.options))}'` : '';
+        return `<div class="detail-field detail-field--editable" data-key="${escapeHTML(key)}" data-type="${opts.type || 'text'}" data-row="${escapeHTML(rowNum)}" data-value="${escapeHTML(safe)}"${dataOpts}>
+            <label>${escapeHTML(label)}</label>
+            <p class="editable-value${safe ? '' : ' empty'}" tabindex="0" role="button" aria-label="Klik for at redigere ${escapeHTML(label)}">${display}</p>
+        </div>`;
+    }
+
+    // Activate inline-edit on a field. Replaces <p> with an input/select.
+    function activateInlineEdit(fieldEl) {
+        if (fieldEl.dataset.editing === '1') return;
+        fieldEl.dataset.editing = '1';
+        const valueEl = fieldEl.querySelector('.editable-value');
+        const originalText = fieldEl.dataset.value || '';
+        const type = fieldEl.dataset.type || 'text';
+        const rowNum = fieldEl.dataset.row;
+        const key = fieldEl.dataset.key;
+
+        let input;
+        if (type === 'select') {
+            const opts = JSON.parse(fieldEl.dataset.options || '[]');
+            input = document.createElement('select');
+            input.className = 'inline-edit-input';
+            const blank = document.createElement('option');
+            blank.value = '';
+            blank.textContent = '— ingen —';
+            input.appendChild(blank);
+            opts.forEach(o => {
+                const opt = document.createElement('option');
+                opt.value = o.value;
+                opt.textContent = o.label;
+                if (o.value === originalText) opt.selected = true;
+                input.appendChild(opt);
+            });
+        } else if (type === 'textarea') {
+            input = document.createElement('textarea');
+            input.rows = 2;
+            input.className = 'inline-edit-input';
+            input.value = originalText;
+        } else {
+            input = document.createElement('input');
+            input.type = (type === 'date') ? 'date' : (type === 'number' ? 'number' : 'text');
+            if (type === 'number') input.step = '0.01';
+            input.className = 'inline-edit-input';
+            input.value = originalText;
+        }
+        valueEl.replaceWith(input);
+        input.focus();
+        if (input.select) try { input.select(); } catch (e) {}
+
+        let settled = false;
+        const finish = async (commit) => {
+            if (settled) return;
+            settled = true;
+            const newValue = commit ? (input.value || '').trim() : originalText;
+            if (commit && newValue !== originalText) {
+                input.disabled = true;
+                try {
+                    const resp = await fetch(`/dashboard/api/kvittering/${encodeURIComponent(rowNum)}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ [key]: newValue === '' ? null : newValue }),
+                    });
+                    if (!resp.ok) {
+                        const j = await resp.json().catch(() => ({}));
+                        throw new Error(j.error || `HTTP ${resp.status}`);
+                    }
+                    await resp.json();
+                    const row = findRowByNum(rowNum);
+                    if (row) {
+                        const LABEL = KEY_TO_LABEL[key];
+                        if (LABEL) row[LABEL] = newValue;
+                    }
+                    showToast('Opdateret.', true);
+                    applyFilters();
+                    return;
+                } catch (e) {
+                    showToast('Fejl: ' + e.message, false);
+                }
+            }
+            // Cancel / no-change → re-build display <p> uden innerHTML
+            const restored = document.createElement('p');
+            restored.className = 'editable-value' + (originalText ? '' : ' empty');
+            restored.setAttribute('tabindex', '0');
+            restored.setAttribute('role', 'button');
+            if (originalText) {
+                restored.textContent = originalText;
+            } else {
+                const hint = document.createElement('span');
+                hint.className = 'muted-hint';
+                hint.textContent = '— klik for at tilføje';
+                restored.appendChild(hint);
+            }
+            input.replaceWith(restored);
+            fieldEl.dataset.editing = '0';
+        };
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && input.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                finish(true);
+            } else if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                finish(true);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                finish(false);
+            }
+        });
+        input.addEventListener('blur', () => finish(true));
+        input.addEventListener('click', (e) => e.stopPropagation());
+    }
+
+    const KEY_TO_LABEL = {
+        butik: 'Butik',
+        beloeb: 'Beløb',
+        dato: 'Dato',
+        beskrivelse: 'Beskrivelse',
+        kategori: 'Kategori',
+        udvalg: 'Udvalg',
+        kommentar: 'Kommentar',
+        type: 'Type',
+        telefon: 'Telefon',
+        reg_nr: 'Reg.nr.',
+        konto_nr: 'Kontonr.',
+    };
+
     function receiptPreviewHTML(url) {
         if (!url || url.trim() === '') return '';
         const safe = escapeHTML(url);
@@ -2003,27 +2236,36 @@
 
             const dataRow = `
             <tr class="data-row" data-row="${rowNum}" onclick="toggleDetail('${rowNum}')">
-                <td>${escapeHTML(row['Dato'] || '—')}</td>
-                <td>${escapeHTML(row['Navn'] || '—')}</td>
-                <td>${escapeHTML(row['Udvalg'] || '—')}</td>
-                <td>${escapeHTML(row['Butik'] || '—')}</td>
-                <td style="text-align:right;font-variant-numeric:tabular-nums;">${fmtDKK(beloeb)}</td>
-                <td>${escapeHTML(row['Kategori'] || '—')}</td>
-                <td>${statusBadgeHTML(row)}</td>
-                <td onclick="event.stopPropagation();">${actionBtnHTML(row)}</td>
+                <td data-label="Dato">${escapeHTML(row['Dato'] || '—')}</td>
+                <td data-label="Navn">${escapeHTML(row['Navn'] || '—')}</td>
+                <td data-label="Udvalg">${escapeHTML(row['Udvalg'] || '—')}</td>
+                <td data-label="Butik">${escapeHTML(row['Butik'] || '—')}</td>
+                <td data-label="Beløb" style="text-align:right;font-variant-numeric:tabular-nums;">${fmtDKK(beloeb)}</td>
+                <td data-label="Kategori">${escapeHTML(row['Kategori'] || '—')}</td>
+                <td data-label="Status">${statusBadgeHTML(row)}</td>
+                <td data-label="" onclick="event.stopPropagation();">${actionBtnHTML(row)}</td>
             </tr>`;
 
+            const udvalgOpts = (udvalgItems || []).map(u => ({ value: u.navn, label: u.navn }));
+            const kategoriOpts = (kategoriItems || []).map(c => ({ value: c.navn, label: c.navn }));
+            const typeOpts = [{ value: 'Udlæg', label: 'Udlæg' }, { value: 'Foreningens kort', label: 'Foreningens kort' }];
             const detailRow = `
             <tr class="detail-row" id="detail-${rowNum}">
                 <td colspan="8">
                     <div class="detail-panel" id="panel-${rowNum}">
                         <div class="detail-grid">
-                            ${detailFieldHTML('Beskrivelse', row['Beskrivelse'])}
-                            ${detailFieldHTML('Kommentar', row['Kommentar'])}
-                            ${detailFieldHTML('Type', row['Type'])}
-                            ${detailFieldHTML('Telefon', row['Telefon'])}
-                            ${detailFieldHTML('Reg.nr.', row['Reg.nr.'])}
-                            ${detailFieldHTML('Kontonr.', row['Kontonr.'])}
+                            ${editableFieldHTML('Butik', 'butik', row['Butik'], rowNum)}
+                            ${editableFieldHTML('Beløb', 'beloeb', row['Beløb'], rowNum, { type: 'number' })}
+                            ${editableFieldHTML('Dato', 'dato', row['Dato'], rowNum, { type: 'date' })}
+                            ${editableFieldHTML('Kategori', 'kategori', row['Kategori'], rowNum, { type: 'select', options: kategoriOpts })}
+                            ${editableFieldHTML('Udvalg', 'udvalg', row['Udvalg'], rowNum, { type: 'select', options: udvalgOpts })}
+                            ${editableFieldHTML('Type', 'type', row['Type'], rowNum, { type: 'select', options: typeOpts })}
+                            ${editableFieldHTML('Beskrivelse', 'beskrivelse', row['Beskrivelse'], rowNum)}
+                            ${editableFieldHTML('Kommentar', 'kommentar', row['Kommentar'], rowNum, { type: 'textarea' })}
+                            ${editableFieldHTML('Telefon', 'telefon', row['Telefon'], rowNum)}
+                            ${editableFieldHTML('Reg.nr.', 'reg_nr', row['Reg.nr.'], rowNum)}
+                            ${editableFieldHTML('Kontonr.', 'konto_nr', row['Kontonr.'], rowNum)}
+                            ${detailFieldHTML('Navn', row['Navn'])}
                             ${detailFieldHTML('Indsendt', row['Indsendt'])}
                             ${detailFieldHTML('Valuta', row['Valuta'])}
                         </div>
@@ -2060,37 +2302,8 @@
         }
     }
 
-    function downloadCSV() {
-        if (filteredRows.length === 0) {
-            showToast('Ingen data at eksportere.', false);
-            return;
-        }
+    // downloadCSV removed — see /dashboard/api/export.xlsx
 
-        const cols = ['Dato', 'Indsendt', 'Navn', 'Type', 'Udvalg', 'Telefon', 'Reg.nr.', 'Kontonr.',
-            'Butik', 'Beskrivelse', 'Beløb', 'Valuta', 'Kategori', 'Kommentar', 'Status', 'Udbetalt dato'];
-
-        const escape = v => {
-            const s = v === null || v === undefined ? '' : String(v);
-            if (s.includes('"') || s.includes(',') || s.includes('\n')) return '"' + s.replace(/"/g, '""') + '"';
-            return s;
-        };
-
-        const lines = [
-            cols.map(escape).join(','),
-            ...filteredRows.map(row => cols.map(c => escape(row[c])).join(','))
-        ];
-
-        const bom = '\uFEFF';
-        const blob = new Blob([bom + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `kvitteringer_${todayISO()}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-    }
 
     // ── Status update ──
     function findRowByNum(rowNum) {
@@ -2271,7 +2484,7 @@
             applyFilters();
         });
 
-        document.getElementById('btnDownloadCSV').addEventListener('click', downloadCSV);
+        // btnDownloadCSV: erstattet af inline href-link til /dashboard/api/export.xlsx
     }
 
     // ── Show tabs, hide loading ──
@@ -2356,11 +2569,33 @@
     }
 
     // ── Init ──
+    // Delegated handler: clicks on editable detail-field values activate inline-edit.
+    function initInlineEdit() {
+        const tbody = document.getElementById('udgifterBody');
+        if (!tbody) return;
+        tbody.addEventListener('click', (e) => {
+            const valueEl = e.target.closest('.detail-field--editable .editable-value');
+            if (!valueEl) return;
+            e.stopPropagation();
+            const fieldEl = valueEl.closest('.detail-field--editable');
+            if (fieldEl) activateInlineEdit(fieldEl);
+        });
+        tbody.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const valueEl = e.target.closest('.detail-field--editable .editable-value');
+            if (!valueEl) return;
+            e.preventDefault();
+            const fieldEl = valueEl.closest('.detail-field--editable');
+            if (fieldEl) activateInlineEdit(fieldEl);
+        });
+    }
+
     function init() {
         initDropdowns();
         initTabs();
         initTableSort();
         initFilters();
+        initInlineEdit();
         loadData();
     }
 

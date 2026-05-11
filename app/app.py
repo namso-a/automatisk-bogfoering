@@ -909,6 +909,97 @@ def api_data():
     return jsonify({"status": "ok", "headers": headers, "rows": mapped})
 
 
+@app.route("/dashboard/api/export.xlsx")
+@auth.require_forening_admin
+def api_export_xlsx():
+    """Stylet XLSX-eksport af alle kvitteringer for foreningen.
+
+    Beløb-kolonnen format'es som tal-med-kr, status med farve-fill, header-række fed.
+    Frontend kan filtrere før kald hvis ønsket — denne route returnerer alt foreningens data.
+    """
+    from io import BytesIO
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    rows = db.list_kvitteringer(g.forening["id"])
+    mapped = [_map_row_to_dashboard(r) for r in rows]
+    headers = [
+        "Dato", "Indsendt", "Navn", "Type", "Udvalg", "Telefon", "Reg.nr.", "Kontonr.",
+        "Butik", "Beskrivelse", "Beløb", "Valuta", "Kategori", "Kommentar",
+        "Status", "Udbetalt dato",
+    ]
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Kvitteringer"
+
+    # Header row — fed + accent-baggrund
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="9A6F28")
+    header_align = Alignment(horizontal="left", vertical="center")
+    thin = Side(border_style="thin", color="D6D0C0")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    for col_idx, h in enumerate(headers, start=1):
+        c = ws.cell(row=1, column=col_idx, value=h)
+        c.font = header_font
+        c.fill = header_fill
+        c.alignment = header_align
+        c.border = border
+
+    # Data rows
+    for row_idx, row in enumerate(mapped, start=2):
+        for col_idx, h in enumerate(headers, start=1):
+            v = row.get(h)
+            c = ws.cell(row=row_idx, column=col_idx, value=v)
+            c.border = border
+            if h == "Beløb":
+                try:
+                    c.value = float(v) if v not in (None, "") else None
+                    c.number_format = '#,##0.00 "kr"'
+                    c.alignment = Alignment(horizontal="right")
+                except (ValueError, TypeError):
+                    pass
+            elif h in ("Dato", "Udbetalt dato"):
+                c.alignment = Alignment(horizontal="left")
+            elif h == "Status":
+                s = (str(v or "")).lower()
+                if s == "godkendt":
+                    c.fill = PatternFill("solid", fgColor="D9EFD9")
+                elif s == "udbetalt":
+                    c.fill = PatternFill("solid", fgColor="C8E6C8")
+                elif s in ("afventer", ""):
+                    c.fill = PatternFill("solid", fgColor="FCEFD0")
+                elif s == "afvist":
+                    c.fill = PatternFill("solid", fgColor="F7D5D2")
+
+    # Auto-width pr kolonne (cap'pet 50 chars)
+    for col_idx, h in enumerate(headers, start=1):
+        col_letter = get_column_letter(col_idx)
+        max_len = len(h)
+        for r in mapped:
+            v = r.get(h)
+            if v is None: continue
+            ln = len(str(v))
+            if ln > max_len: max_len = ln
+        ws.column_dimensions[col_letter].width = min(max(max_len + 2, 10), 50)
+
+    # Freeze header
+    ws.freeze_panes = "A2"
+
+    buf = BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+
+    fname = f"kvitly-{g.forening.get('slug','export')}-{datetime.now(timezone.utc).date().isoformat()}.xlsx"
+    return Response(
+        buf.getvalue(),
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
+
+
 @app.route("/dashboard/api/categories", methods=["GET"])
 @auth.require_forening_admin
 def api_categories_list():
@@ -1088,6 +1179,54 @@ def api_upload_disabled():
     disabled = bool(data.get("disabled", False))
     db.set_upload_disabled(g.forening["id"], disabled)
     return jsonify({"status": "ok", "disabled": disabled})
+
+
+@app.route("/dashboard/api/kvittering/<kvittering_id>", methods=["PATCH"])
+@auth.require_forening_admin
+def api_patch_kvittering(kvittering_id):
+    """Update individual fields on a kvittering. Whitelisted for safety —
+    only fields admin reasonably needs to correct in the dashboard."""
+    data = request.get_json() or {}
+    # Whitelist + simple type-coercion. Pas på navn/email/kvittering — de er locked.
+    ALLOWED = {
+        "butik": str,
+        "beloeb": "decimal",
+        "dato": str,         # YYYY-MM-DD
+        "beskrivelse": str,
+        "kategori": str,
+        "udvalg": str,
+        "kommentar": str,
+        "type": str,
+        "telefon": str,
+        "reg_nr": str,
+        "konto_nr": str,
+        "admin_note": str,
+    }
+    updates: dict = {}
+    for key, expected in ALLOWED.items():
+        if key not in data:
+            continue
+        v = data[key]
+        if v is None or v == "":
+            updates[key] = None
+            continue
+        if expected == "decimal":
+            try:
+                updates[key] = float(v)
+            except (ValueError, TypeError):
+                return jsonify({"error": f"Ugyldigt tal for {key}."}), 400
+        else:
+            updates[key] = str(v).strip()[:500]
+
+    if not updates:
+        return jsonify({"error": "Ingen gyldige felter at opdatere."}), 400
+
+    row = db.update_kvittering(
+        kvittering_id, g.forening["id"], updates, actor_user_id=g.user_id
+    )
+    if not row:
+        return jsonify({"error": "Kvittering ikke fundet."}), 404
+    return jsonify({"status": "ok", "row": row})
 
 
 @app.route("/dashboard/api/kvittering/<kvittering_id>", methods=["DELETE"])

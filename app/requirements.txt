@@ -10,3 +10,4 @@ flask-limiter>=3.5
 PyJWT[crypto]>=2.8
 qrcode[pil]>=7.4
 sentry-sdk[flask]>=2.0
+openpyxl>=3.1

@@ -245,6 +245,16 @@
             cursor: pointer;
         }
 
+        /* When files are picked, the file-list takes over the upload-area's
+           interior. The absolutely-positioned <input> would otherwise overlay
+           the thumbnails (and their X-buttons), making any click — including
+           on the remove button — re-open the file picker. Disable hit-testing
+           on the overlay input in that state; the camera/gallery/add-more
+           buttons still fire fileInput.click() programmatically. */
+        .upload-area.has-files input[type="file"] {
+            pointer-events: none;
+        }
+
         /* File list (multi-upload) */
         .file-list {
             display: none;
@@ -1097,11 +1107,18 @@
             fileInput.click();
         });
 
+        // Mirrors MAX_BATCH in app.py upload_scan. Client-side cap gives
+        // immediate feedback at add-time so the user doesn't compress &
+        // upload 50 MB just to get a 400 back from the server.
+        const MAX_FILES = 15;
+
         async function addFiles(newFiles) {
             let duplicateFound = false;
+            let limitHit = false;
             for (const f of newFiles) {
                 if (!isAllowedFile(f)) continue;
                 if (selectedFiles.some(s => s.name === f.name && s.size === f.size)) continue;
+                if (selectedFiles.length >= MAX_FILES) { limitHit = true; continue; }
 
                 const hash = await hashFile(f);
                 if (seenHashes.has(hash)) {
@@ -1115,6 +1132,21 @@
             if (duplicateFound) {
                 showDuplicateWarning();
             }
+            if (limitHit) {
+                showLimitWarning();
+            }
+        }
+
+        function showLimitWarning() {
+            let warn = uploadArea.querySelector('.duplicate-warn.limit-warn');
+            if (!warn) {
+                warn = document.createElement('div');
+                warn.className = 'duplicate-warn limit-warn';
+                warn.textContent = `Maks ${MAX_FILES} kvitteringer per upload — del op i flere uploads, så de når i mål.`;
+                uploadArea.appendChild(warn);
+            }
+            clearTimeout(warn._timer);
+            warn._timer = setTimeout(() => warn.remove(), 5000);
         }
 
         function showDuplicateWarning() {

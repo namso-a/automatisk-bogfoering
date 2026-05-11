@@ -910,7 +910,7 @@
             <h2>Tak!</h2>
             <p id="success-text">Din kvittering er modtaget og bliver behandlet.</p>
             <div class="ocr-results" id="ocr-results"></div>
-            <a href="/" class="again-btn">Indsend flere</a>
+            <a href="/u/{{ upload_token }}" class="again-btn">Indsend flere</a>
         </div>
 
         <p style="text-align:center; margin-top:2rem; font-size:0.78rem; color:#8a817a; line-height:1.6;">
@@ -1548,9 +1548,7 @@
             if (prevErr) prevErr.remove();
 
             const total = scanResults.length;
-            confirmProgress.textContent = total > 1
-                ? `Sender kvittering 1 af ${total}...`
-                : 'Sender til Google Sheets...';
+            confirmProgress.textContent = 'Sender...';
             confirmProgress.classList.add('visible');
 
             // Collect edited data from review cards
@@ -1593,12 +1591,11 @@
                         if (r._parseError) {
                             errors.push('Kunne ikke læse svar fra server');
                         } else if (r.step) {
-                            confirmProgress.textContent = r.message;
+                            // Statisk 'Sender...' — ingen per-kvittering-tæller.
+                            // NDJSON-streamen er for confirm-flow (ikke OCR), så
+                            // brugeren behøver ikke detail-progress.
                         } else if (r.status === 'ok') {
                             completed++;
-                            if (total > 1 && r.index + 1 < total) {
-                                confirmProgress.textContent = `Sender kvittering ${r.index + 2} af ${total}...`;
-                            }
                         } else {
                             errors.push(r.error || 'Ukendt fejl');
                         }

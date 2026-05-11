@@ -1036,7 +1036,6 @@ def api_update_status():
     # Accept both `id` (new) and `row` (legacy alias from dashboard.html)
     kvittering_id = data.get("id") or data.get("row")
     raw_status = (data.get("status") or "").strip().lower()  # normalize "Godkendt" → "godkendt"
-    udbetalt_dato = data.get("udbetalt_dato") or None
     admin_note = data.get("admin_note")
 
     if not kvittering_id:
@@ -1048,8 +1047,11 @@ def api_update_status():
     updates: dict = {}
     if status:
         updates["status"] = status
-    if udbetalt_dato:
-        updates["udbetalt_dato"] = udbetalt_dato
+    # udbetalt_dato: skel mellem 'ikke sat' (don't touch), '' (clear), 'YYYY-MM-DD' (set).
+    # Frontend sender empty string når den vil clear feltet (revert udbetalt → godkendt).
+    if "udbetalt_dato" in data:
+        v = data.get("udbetalt_dato")
+        updates["udbetalt_dato"] = v if v else None
     if admin_note is not None:
         updates["admin_note"] = admin_note
 

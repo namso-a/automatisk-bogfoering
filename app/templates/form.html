@@ -957,8 +957,11 @@
             start(n) {
                 this.total = n; this.completed = 0;
                 this.pctFake = 5; this.pctReal = 0; this.done = false;
+                // Static label — Render's edge buffers NDJSON unreliably, so
+                // per-receipt counter updates can't be trusted to land in
+                // real-time. The fill-bar carries the progress signal instead.
                 submitBtnLabel.textContent = n > 1
-                    ? `Scanner kvittering 1 af ${n}...`
+                    ? `Scanner ${n} kvitteringer...`
                     : 'Scanner kvittering...';
                 submitBtn.style.setProperty('--scan-pct', '5%');
                 cancelAnimationFrame(this.rafId);
@@ -967,11 +970,6 @@
             bump() {
                 this.completed++;
                 this.pctReal = this.total > 0 ? (this.completed / this.total) * 90 : 0;
-                if (this.total > 1) {
-                    // 1-indexed display, clamped so the final bump doesn't overshoot.
-                    const showing = Math.min(this.completed + 1, this.total);
-                    submitBtnLabel.textContent = `Scanner kvittering ${showing} af ${this.total}...`;
-                }
             },
             end() { this.done = true; },
             tick() {

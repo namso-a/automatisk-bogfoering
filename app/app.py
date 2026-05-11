@@ -65,6 +65,23 @@ from tools import auth, db
 ROOT = Path(__file__).resolve().parent
 load_dotenv(ROOT / ".env")
 
+# Sentry error tracking — initialiseres FØR Flask-instansen så alle requests
+# fanges. No-op hvis SENTRY_DSN ikke er sat (dev / pre-config).
+_sentry_dsn = os.environ.get("SENTRY_DSN", "").strip()
+if _sentry_dsn:
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.flask import FlaskIntegration
+        sentry_sdk.init(
+            dsn=_sentry_dsn,
+            integrations=[FlaskIntegration()],
+            traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+            environment=os.environ.get("SENTRY_ENVIRONMENT", "production"),
+            send_default_pii=False,
+        )
+    except Exception:
+        pass  # Sentry må aldrig blokere app-boot
+
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key-change-me")
@@ -219,6 +236,45 @@ def handelsbetingelser():
 @app.route("/health")
 def health():
     return jsonify({"status": "ok", "ts": datetime.now(timezone.utc).isoformat()}), 200
+
+
+@app.route("/robots.txt")
+def robots_txt():
+    """Allow indexing of public pages; disallow auth + dashboard + upload-tokens."""
+    body = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /dashboard\n"
+        "Disallow: /dashboard/\n"
+        "Disallow: /login\n"
+        "Disallow: /signup\n"
+        "Disallow: /forgot-password\n"
+        "Disallow: /reset-password\n"
+        "Disallow: /u/\n"
+        "Disallow: /dev-login\n"
+        "Sitemap: https://kvitly.dk/sitemap.xml\n"
+    )
+    return Response(body, mimetype="text/plain")
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    """Sitemap with the 3 publicly-indexable URLs."""
+    today = datetime.now(timezone.utc).date().isoformat()
+    urls = [
+        ("https://kvitly.dk/", "1.0", "weekly"),
+        ("https://kvitly.dk/handelsbetingelser", "0.3", "yearly"),
+        ("https://kvitly.dk/privatlivspolitik", "0.3", "yearly"),
+    ]
+    parts = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for loc, priority, changefreq in urls:
+        parts.append(
+            f"  <url><loc>{loc}</loc><lastmod>{today}</lastmod>"
+            f"<changefreq>{changefreq}</changefreq><priority>{priority}</priority></url>"
+        )
+    parts.append("</urlset>")
+    return Response("\n".join(parts), mimetype="application/xml")
 
 
 @app.route("/demo-request", methods=["POST"])
@@ -486,6 +542,15 @@ def signup_post():
         ), 500
 
     db.consume_invite_code(invite_code, forening["id"])
+
+    # Welcome-email (Resend). Best-effort — signup-flowet må ikke knække
+    # hvis Resend er nede; logger og fortsætter.
+    try:
+        from tools.notify_submitter import notify_welcome
+        upload_link = f"{request.url_root.rstrip('/')}/u/{forening['upload_token']}"
+        notify_welcome(email, forening, upload_link)
+    except Exception as e:
+        app.logger.warning("Welcome-email send failed: %s", e)
 
     if access_token:
         resp = make_response(redirect(url_for("dashboard")))

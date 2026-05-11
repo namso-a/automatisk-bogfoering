@@ -958,26 +958,19 @@
             display: block;
         }
 
-        /* ── Card screenshots (Sådan virker det) ── */
-        .card-screenshot {
-            display: block;
-            width: 100%;
-            height: 180px;                /* fast højde — aspect-ratio CSS bliver overrulet
-                                              af HTML height-attr på nogle browsers, så hardcoded */
-            margin-top: 1.5rem;
-            object-fit: cover;
-            object-position: center top;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            box-shadow:
-                0 10px 24px -10px rgba(26, 22, 18, 0.18),
-                0 0 0 1px rgba(26, 22, 18, 0.03);
-            background: var(--bg-soft);
+        /* ── Card icons (Sådan virker det) ── */
+        .card-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--accent-soft);
+            color: var(--accent);
+            margin-bottom: 1.5rem;
         }
-        /* Per-card object-position så hvert crop viser meningsfuldt indhold */
-        .card-screenshot--mobile  { object-position: center 18%; }   /* upload-form mellem header og kvitterings-liste */
-        .card-screenshot--table   { object-position: center 30%; }   /* dashboard-udgifter: tabelrækker med beløb */
-        .card-screenshot--kpis    { object-position: center 70%; }   /* dashboard-oversigt: KPI-kort + charts */
+        .card-icon svg { width: 26px; height: 26px; }
 
         /* ── Scroll fade-in (subtil) ── */
         .reveal {
@@ -1112,22 +1105,39 @@
         </div>
         <div class="card-grid">
             <div class="card">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="6" width="18" height="14" rx="2"/>
+                        <circle cx="12" cy="13" r="3.5"/>
+                        <path d="M9 6l1.5-2h3L15 6"/>
+                    </svg>
+                </div>
                 <div class="card-num">I. Upload</div>
                 <h3>Frivillig uploader</h3>
                 <p>Fra mobilen, uden at installere en app. Tager 10 sekunder. Alle i foreningen kan bruge samme upload-link.</p>
-                <img class="card-screenshot card-screenshot--mobile" src="{{ url_for('static', filename='img/landing/upload-mobile.jpg') }}" alt="Upload-formen på mobil" loading="lazy">
             </div>
             <div class="card">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2 2M16.4 16.4l2 2M5.6 18.4l2-2M16.4 7.6l2-2"/>
+                        <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>
+                    </svg>
+                </div>
                 <div class="card-num">II. AI</div>
                 <h3>AI læser alt</h3>
                 <p>Beløb, dato, butik, kategori, valuta. Frivillige bekræfter inden de trykker indsend.</p>
-                <img class="card-screenshot card-screenshot--table" src="{{ url_for('static', filename='img/landing/dashboard-udgifter.jpg') }}" alt="Auto-genkendte felter i tabel" loading="lazy">
             </div>
             <div class="card">
+                <div class="card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="13" width="4" height="7" rx="0.6"/>
+                        <rect x="10" y="9" width="4" height="11" rx="0.6"/>
+                        <rect x="17" y="5" width="4" height="15" rx="0.6"/>
+                    </svg>
+                </div>
                 <div class="card-num">III. Dashboard</div>
                 <h3>Dashboardet viser alt</h3>
                 <p>Forbrug per udvalg, grafer over tid, godkend og udbetal med ét klik. Eksport til bogføring når I vil.</p>
-                <img class="card-screenshot card-screenshot--kpis" src="{{ url_for('static', filename='img/landing/dashboard-oversigt.jpg') }}" alt="Dashboard KPI-kort" loading="lazy">
             </div>
         </div>
     </div>

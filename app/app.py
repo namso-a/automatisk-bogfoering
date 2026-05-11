@@ -754,6 +754,7 @@ def dashboard():
         upload_link_base=request.url_root.rstrip("/"),
         categories_json=json.dumps(cats),
         udvalg_json=json.dumps(udvalg_list),
+        admin_email=g.user_email or "",
     )
 
 

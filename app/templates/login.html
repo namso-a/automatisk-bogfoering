@@ -40,7 +40,27 @@
             cursor: pointer; transition: background 0.2s; margin-top: 0.4rem;
         }
         button:hover { background: var(--accent); }
-        .error { color: #b33; font-size: 0.88rem; margin-bottom: 1rem; text-align: left; }
+        .error {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.55rem;
+            background: #fef0ef;
+            border-left: 3px solid #c84a3a;
+            color: #8a2a20;
+            padding: 0.7rem 0.9rem;
+            border-radius: var(--radius);
+            font-size: 0.88rem;
+            line-height: 1.4;
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+        .error::before {
+            content: "";
+            flex-shrink: 0;
+            width: 18px; height: 18px;
+            margin-top: 1px;
+            background: no-repeat center/contain url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c84a3a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><line x1='12' y1='8' x2='12' y2='12'/><circle cx='12' cy='16' r='0.5' fill='%23c84a3a' stroke-width='2'/></svg>");
+        }
         .footer-link { display: block; margin-top: 1.6rem; font-size: 0.85rem; color: var(--muted); }
         .footer-link a { color: var(--accent); text-decoration: none; }
         .footer-link a:hover { text-decoration: underline; }
@@ -71,5 +91,22 @@
         <p class="footer-link"><a href="{{ url_for('forgot_password') }}">Glemt adgangskode?</a></p>
         <p class="footer-link">Har du ikke en konto? <a href="{{ url_for('signup') }}">Opret forening</a></p>
     </div>
+    <script>
+        // Danish HTML5 validation messages — browsers default to user's locale,
+        // but we always want Danish on Kvitly. Setting custom messages on the
+        // invalid event lets the browser still pick when to show them.
+        document.querySelectorAll('input').forEach(el => {
+            el.addEventListener('invalid', () => {
+                const v = el.validity;
+                let msg = '';
+                if (v.valueMissing) msg = 'Udfyld venligst dette felt.';
+                else if (v.typeMismatch && el.type === 'email') msg = 'Indtast en gyldig email-adresse.';
+                else if (v.tooShort) msg = `Minimum ${el.minLength} tegn.`;
+                else if (v.patternMismatch) msg = 'Ugyldigt format.';
+                el.setCustomValidity(msg);
+            });
+            el.addEventListener('input', () => el.setCustomValidity(''));
+        });
+    </script>
 </body>
 </html>

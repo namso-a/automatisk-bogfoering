@@ -78,6 +78,15 @@
             margin-top: 0.2rem;
         }
 
+        .header-right { display: flex; align-items: center; gap: 0.7rem; }
+        .header-right .user-email {
+            font-size: 0.85rem;
+            color: var(--muted);
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
         .header-right a {
             font-size: 0.85rem;
             font-weight: 500;
@@ -91,9 +100,11 @@
             white-space: nowrap;
         }
 
-        .header-right a:hover {
+        .header-right a:hover,
+        .header-right a:focus-visible {
             color: var(--accent);
             border-color: var(--accent);
+            outline: none;
         }
 
         /* ── Upload-link card ── */
@@ -372,6 +383,12 @@
             margin-bottom: -2px;
             cursor: pointer;
             transition: color 0.2s, border-color 0.2s;
+            min-height: 44px;
+        }
+        .tab-btn:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: -4px;
+            border-radius: 4px;
         }
 
         .tab-btn:hover {
@@ -597,6 +614,34 @@
         }
 
         .detail-receipt a:hover { text-decoration: underline; }
+
+        /* ── Detail actions (Slet kvittering m.fl.) ── */
+        .detail-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--warm);
+        }
+        .btn-delete-kvit {
+            background: transparent;
+            border: 1px solid #e8c0c0;
+            color: #b33;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .btn-delete-kvit:hover,
+        .btn-delete-kvit:focus-visible {
+            background: #b33;
+            color: #fff;
+            border-color: #b33;
+            outline: none;
+        }
 
         /* ── Status badge ── */
         .status-badge {
@@ -833,14 +878,23 @@
             font-size: 0.85rem;
             transition: color 0.15s, background 0.15s, border-color 0.15s;
         }
-        .settings-list-item .icon-btn:hover {
+        .settings-list-item .icon-btn:hover,
+        .settings-list-item .icon-btn:focus-visible {
             color: var(--accent);
             background: var(--card-bg);
             border-color: var(--warm);
+            outline: none;
         }
-        .settings-list-item .icon-btn--danger:hover { color: #b33; border-color: #e8c0c0; }
+        .settings-list-item .icon-btn:focus-visible {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(154, 111, 40, 0.18);
+        }
+        .settings-list-item .icon-btn--danger:hover,
+        .settings-list-item .icon-btn--danger:focus-visible { color: #b33; border-color: #e8c0c0; }
         .settings-list-item .icon-btn--save { color: var(--accent); }
         .settings-list-item .icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .settings-list-item.system-row input { color: var(--muted); font-style: italic; }
+        .settings-list-item.system-row .icon-btn--danger { display: none; }
         .settings-empty {
             text-align: center;
             color: var(--muted);
@@ -919,35 +973,54 @@
         /* ── Toast notification ── */
         #toast {
             position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
-            padding: 0.75rem 1.25rem;
-            border-radius: var(--radius);
-            font-size: 0.88rem;
+            top: 1.25rem;
+            right: 1.25rem;
+            padding: 0.95rem 1.25rem 0.95rem 2.85rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
             font-weight: 500;
+            line-height: 1.35;
             z-index: 1000;
             opacity: 0;
-            transform: translateY(0.5rem);
-            transition: opacity 0.25s, transform 0.25s;
+            transform: translateX(1.5rem);
+            transition: opacity 0.25s ease-out, transform 0.25s ease-out;
             pointer-events: none;
-            max-width: 320px;
+            max-width: 360px;
+            box-shadow: 0 12px 24px -8px rgba(26, 22, 18, 0.18), 0 2px 6px -1px rgba(26, 22, 18, 0.08);
         }
 
         #toast.show {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(0);
+        }
+
+        #toast::before {
+            content: "";
+            position: absolute;
+            left: 0.95rem; top: 50%;
+            transform: translateY(-50%);
+            width: 22px; height: 22px;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
         }
 
         #toast.toast-ok {
-            background: var(--success-bg);
-            color: var(--success-ink);
+            background: #f1f9f1;
+            color: #1f4d1f;
             border: 1px solid #b8d9b8;
+        }
+        #toast.toast-ok::before {
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231f4d1f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10' fill='%23d0e8d0'/><polyline points='8 12 11 15 16 9'/></svg>");
         }
 
         #toast.toast-err {
             background: #fde8e3;
             color: #7a1a00;
             border: 1px solid #f0b8a8;
+        }
+        #toast.toast-err::before {
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237a1a00' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10' fill='%23f7c7b8'/><line x1='12' y1='8' x2='12' y2='13'/><circle cx='12' cy='16.5' r='0.6' fill='%237a1a00'/></svg>");
         }
 
         /* ── Responsive ── */
@@ -1021,6 +1094,7 @@
             <p>{{ forening_name }} · kvitteringsoversigt</p>
         </div>
         <div class="header-right">
+            {% if admin_email %}<span class="user-email" title="Logget ind som">{{ admin_email }}</span>{% endif %}
             <a href="/logout">Log ud</a>
         </div>
     </header>
@@ -1773,6 +1847,9 @@
                             ${detailFieldHTML('Valuta', row['Valuta'])}
                         </div>
                         ${receiptPreviewHTML(row['Kvittering'])}
+                        <div class="detail-actions">
+                            <button type="button" class="btn-delete-kvit" onclick="event.stopPropagation();deleteKvittering('${rowNum}')">Slet kvittering</button>
+                        </div>
                     </div>
                 </td>
             </tr>`;
@@ -1880,17 +1957,39 @@
         updateStatus(rowNum, 'Udbetalt', todayISO());
     };
 
-    // ── Toast ──
-    let toastTimer = null;
-    function showToast(msg, ok) {
-        const el = document.getElementById('toast');
-        el.textContent = msg;
-        el.className = 'show ' + (ok ? 'toast-ok' : 'toast-err');
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => { el.className = ''; }, 3000);
-    }
+    window.deleteKvittering = async function (rowNum) {
+        const row = findRowByNum(rowNum);
+        const label = row ? `${row['Butik'] || row['Navn'] || 'kvitteringen'}${row['Beløb'] ? ' (' + row['Beløb'] + ' kr)' : ''}` : 'kvitteringen';
+        if (!confirm(`Slet ${label}?\n\nKvitteringen + filen i Storage fjernes permanent. Handlingen kan ikke fortrydes.`)) return;
+        try {
+            const r = await fetch(`/dashboard/api/kvittering/${encodeURIComponent(rowNum)}`, { method: 'DELETE' });
+            if (!r.ok) {
+                const j = await r.json().catch(() => ({}));
+                throw new Error(j.error || 'HTTP ' + r.status);
+            }
+            allRows = allRows.filter(r => r['_row'] !== rowNum);
+            applyFilters();
+            showToast('Kvittering slettet.', true);
+        } catch (e) {
+            showToast('Fejl: ' + e.message, false);
+        }
+    };
+
+    // ── Toast — defined later in the file; the duplicate previously here
+    //    was shadowed by hoisting anyway. Kept this comment block as a beacon
+    //    in case someone greps for "Toast" in the table-render section. ──
 
     // ── Tab switching ──
+    // Upload-link-card vises kun på Oversigt + Indstillinger (de to tabs hvor man
+    // arbejder med link/QR/setup). På Udgifter og Eksport er man fokuseret på
+    // tabel-data og kortet er bare visuel støj.
+    const TABS_SHOWING_UPLOAD_LINK = new Set(['oversigt', 'indstillinger']);
+    function setUploadLinkVisibility(tabName) {
+        const card = document.getElementById('uploadLinkCard');
+        if (!card) return;
+        card.style.display = TABS_SHOWING_UPLOAD_LINK.has(tabName) ? '' : 'none';
+    }
+
     function initTabs() {
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1905,8 +2004,12 @@
                 }
                 // Hide others
                 document.querySelectorAll('.tab-panel:not(.active)').forEach(p => { p.style.display = 'none'; });
+                setUploadLinkVisibility(tab);
             });
         });
+        // Initial: hvis startTab er Oversigt (default), kortet er allerede synligt
+        const activeBtn = document.querySelector('.tab-btn.active');
+        if (activeBtn) setUploadLinkVisibility(activeBtn.dataset.tab);
     }
 
     // ── Table sort headers ──
@@ -2172,7 +2275,10 @@
         el.textContent = msg;
         el.className = 'show ' + (ok ? 'toast-ok' : 'toast-err');
         clearTimeout(el._t);
-        el._t = setTimeout(() => { el.className = ''; }, 3000);
+        // 4.5s — bumped from 3s after audit. Status updates were easy to miss
+        // when the table didn't visibly change (e.g. Godkend on a filter that
+        // still shows the row); longer dwell + slide-in animation reduces that.
+        el._t = setTimeout(() => { el.className = ''; }, 4500);
     }
 
     async function loadAll() {
@@ -2205,6 +2311,10 @@
     function buildItem(item, baseUrl) {
         const li = document.createElement('li');
         li.className = 'settings-list-item';
+        // "Andet" er en system-fallback der altid skal kunne vælges i upload-formen.
+        // Marker den let-dæmpet + skjul slet-knappen så admin ikke bryder formen ved et uheld.
+        const isSystemRow = item.navn === 'Andet';
+        if (isSystemRow) li.classList.add('system-row');
         li.dataset.id = item.id;
         li.dataset.original = item.navn;
 
@@ -2212,25 +2322,38 @@
         input.type = 'text';
         input.value = item.navn;
         input.maxLength = 60;
+        if (isSystemRow) {
+            input.readOnly = true;
+            input.title = 'Standard-kategori — kan ikke ændres';
+        }
 
         const saveBtn = document.createElement('button');
         saveBtn.type = 'button';
         saveBtn.className = 'icon-btn icon-btn--save';
         saveBtn.title = 'Gem omdøbning';
+        saveBtn.setAttribute('aria-label', 'Gem omdøbning');
         saveBtn.textContent = '✓';
         saveBtn.style.display = 'none';
+        // Hidden buttons must also be disabled so they can't be activated
+        // programmatically or by stray focus/Enter while in the "non-dirty" state.
+        saveBtn.disabled = true;
 
         const delBtn = document.createElement('button');
         delBtn.type = 'button';
         delBtn.className = 'icon-btn icon-btn--danger';
         delBtn.title = 'Slet';
+        delBtn.setAttribute('aria-label', `Slet ${item.navn}`);
         delBtn.textContent = '🗑';
+        if (isSystemRow) delBtn.disabled = true;
 
         input.addEventListener('input', () => {
+            if (isSystemRow) { input.value = li.dataset.original; return; }
             const dirty = input.value.trim() !== li.dataset.original;
             input.classList.toggle('dirty', dirty);
             saveBtn.style.display = dirty ? '' : 'none';
+            saveBtn.disabled = !dirty;
             delBtn.style.display = dirty ? 'none' : '';
+            delBtn.disabled = dirty;
         });
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && saveBtn.style.display !== 'none') {
@@ -2256,13 +2379,15 @@
                 const j = await r.json();
                 if (!r.ok) throw new Error(j.error || 'HTTP ' + r.status);
                 li.dataset.original = newName;
+                delBtn.setAttribute('aria-label', `Slet ${newName}`);
                 input.classList.remove('dirty');
                 saveBtn.style.display = 'none';
+                saveBtn.disabled = true;
                 delBtn.style.display = '';
+                delBtn.disabled = false;
                 showToast('Omdøbt — opdaterede også eksisterende kvitteringer.', true);
             } catch (e) {
                 showToast('Fejl: ' + e.message, false);
-            } finally {
                 saveBtn.disabled = false;
             }
         });

@@ -1672,9 +1672,9 @@
         const rowNum = row['_row'];
         if (s === 'udbetalt') return '';
         if (s === 'godkendt') {
-            return `<button class="btn btn-success" onclick="event.stopPropagation();markUdbetalt(${rowNum})">Marker udbetalt</button>`;
+            return `<button class="btn btn-success" onclick="event.stopPropagation();markUdbetalt('${rowNum}')">Marker udbetalt</button>`;
         }
-        return `<button class="btn btn-primary" onclick="event.stopPropagation();godkend(${rowNum})">Godkend</button>`;
+        return `<button class="btn btn-primary" onclick="event.stopPropagation();godkend('${rowNum}')">Godkend</button>`;
     }
 
     function escapeHTML(str) {
@@ -1737,7 +1737,7 @@
             const beloeb = parseAmount(row['Beløb']);
 
             const dataRow = `
-            <tr class="data-row" data-row="${rowNum}" onclick="toggleDetail(${rowNum})">
+            <tr class="data-row" data-row="${rowNum}" onclick="toggleDetail('${rowNum}')">
                 <td>${escapeHTML(row['Dato'] || '—')}</td>
                 <td>${escapeHTML(row['Navn'] || '—')}</td>
                 <td>${escapeHTML(row['Udvalg'] || '—')}</td>

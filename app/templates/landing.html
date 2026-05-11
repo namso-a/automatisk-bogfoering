@@ -846,6 +846,232 @@
             .bullets li { gap: 1rem; }
             .bullets strong { font-size: 1.2rem; }
         }
+
+        /* ── Hero split-layout med phone-mockup ── */
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.05fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1.75rem;
+            position: relative;
+            z-index: 2;
+        }
+        .hero-text { text-align: left; }
+        .hero-text .eyebrow { margin-bottom: 1.4rem; }
+        .hero-text h1 {
+            margin-left: 0;
+            margin-right: 0;
+            max-width: 14ch;
+            text-align: left;
+        }
+        .hero-text .sub {
+            margin-left: 0;
+            margin-right: 0;
+            text-align: left;
+        }
+        .hero-text .hero-actions {
+            justify-content: flex-start;
+            margin-bottom: 0;
+        }
+        .hero-visual {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 520px;
+        }
+        .phone-frame {
+            position: relative;
+            width: 100%;
+            max-width: 290px;
+            aspect-ratio: 390 / 844;
+            background: #1a1612;
+            border-radius: 36px;
+            padding: 10px;
+            box-shadow:
+                0 40px 80px -24px rgba(26, 22, 18, 0.38),
+                0 14px 28px -10px rgba(26, 22, 18, 0.18),
+                0 0 0 1px rgba(26, 22, 18, 0.06);
+        }
+        .phone-frame::before {
+            content: "";
+            position: absolute;
+            top: 16px; left: 50%;
+            transform: translateX(-50%);
+            width: 84px; height: 5px;
+            border-radius: 100px;
+            background: #3a3530;
+            z-index: 3;
+        }
+        .phone-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            border-radius: 28px;
+            display: block;
+        }
+        .floating-badge {
+            position: absolute;
+            background: #fff;
+            border-radius: 14px;
+            padding: 0.7rem 1rem;
+            box-shadow:
+                0 18px 36px -14px rgba(26, 22, 18, 0.28),
+                0 4px 10px -2px rgba(26, 22, 18, 0.10),
+                0 0 0 1px rgba(26, 22, 18, 0.04);
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--ink);
+            display: flex;
+            gap: 0.55rem;
+            align-items: center;
+            z-index: 4;
+            white-space: nowrap;
+        }
+        .floating-badge svg { color: #2d8a2d; flex-shrink: 0; }
+        .floating-badge--top { top: 12%; right: -6%; }
+        .floating-badge--bottom { bottom: 18%; left: -10%; }
+        .badge-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 900px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+                text-align: center;
+            }
+            .hero-text { text-align: center; }
+            .hero-text h1 {
+                margin-left: auto;
+                margin-right: auto;
+                max-width: 18ch;
+                text-align: center;
+            }
+            .hero-text .sub {
+                margin-left: auto;
+                margin-right: auto;
+                text-align: center;
+            }
+            .hero-text .hero-actions { justify-content: center; }
+            .hero-visual { min-height: 0; }
+            .phone-frame { max-width: 240px; }
+            .floating-badge--top { top: 4%; right: 2%; }
+            .floating-badge--bottom { bottom: 8%; left: 2%; }
+        }
+        @media (max-width: 600px) {
+            .floating-badge { display: none; }
+        }
+
+        /* ── Dashboard preview section ── */
+        .dashboard-preview { padding: 4rem 0 5.5rem; }
+        .dashboard-preview .section-head { margin-bottom: 2.5rem; }
+        .screenshot-frame {
+            max-width: 980px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid var(--border-strong);
+            box-shadow:
+                0 40px 80px -20px rgba(26, 22, 18, 0.22),
+                0 14px 30px -10px rgba(26, 22, 18, 0.08),
+                0 0 0 1px rgba(26, 22, 18, 0.03);
+            position: relative;
+            z-index: 2;
+        }
+        .browser-chrome {
+            background: var(--bg-soft);
+            padding: 0.7rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .browser-chrome > span:nth-child(-n+3) {
+            width: 11px; height: 11px;
+            border-radius: 50%;
+            background: var(--border-strong);
+            flex-shrink: 0;
+        }
+        .browser-chrome > span:first-child { background: #e67767; }
+        .browser-chrome > span:nth-child(2) { background: #e8b94a; }
+        .browser-chrome > span:nth-child(3) { background: #4ab36c; }
+        .browser-url {
+            flex: 1;
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--muted);
+            background: var(--bg);
+            padding: 0.4rem 0.95rem;
+            border-radius: 100px;
+            max-width: 320px;
+            margin: 0 auto;
+            font-family: 'Inter', sans-serif;
+        }
+        .screenshot-frame > img {
+            width: 100%;
+            display: block;
+        }
+
+        /* ── Card screenshots (Sådan virker det) ── */
+        .card-screenshot {
+            width: 100%;
+            margin-top: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow:
+                0 10px 24px -10px rgba(26, 22, 18, 0.18),
+                0 0 0 1px rgba(26, 22, 18, 0.03);
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
+            object-position: top center;
+            display: block;
+            background: var(--bg-soft);
+        }
+
+        /* ── Scroll fade-in (subtil) ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .reveal.in-view {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .reveal {
+                opacity: 1;
+                transform: none;
+                transition: none;
+            }
+        }
+
+        /* ── Card depth-shadows ── */
+        .card {
+            box-shadow:
+                0 10px 24px -14px rgba(26, 22, 18, 0.12),
+                0 2px 4px -2px rgba(26, 22, 18, 0.04);
+        }
+        .card:hover {
+            box-shadow:
+                0 22px 44px -16px rgba(26, 22, 18, 0.18),
+                0 4px 8px -4px rgba(26, 22, 18, 0.06);
+        }
+        .price-card {
+            box-shadow:
+                0 28px 60px -20px rgba(26, 22, 18, 0.18),
+                0 6px 14px -6px rgba(26, 22, 18, 0.06),
+                0 0 0 1px rgba(26, 22, 18, 0.04);
+        }
     </style>
 </head>
 <body>
@@ -858,16 +1084,35 @@
     </div>
 </nav>
 
-<header class="hero wrap">
-    <span class="eyebrow">Til danske foreninger</span>
-    <h1>Slip for <em>kvitteringskaoset</em> i foreningen</h1>
-    <p class="sub">Frivillige uploader fra mobilen. AI læser beløb, dato og butik automatisk. Kassereren får alt sorteret per udvalg, klar til godkendelse.</p>
-    <div class="hero-actions">
-        <a href="#start" class="btn btn-primary btn-large">Skriv til mig</a>
-        <a href="#hvordan" class="btn btn-secondary btn-large">Se hvordan det virker</a>
+<header class="hero">
+    <div class="hero-grid">
+        <div class="hero-text">
+            <span class="eyebrow">Til danske foreninger</span>
+            <h1>Slip for <em>kvitteringskaoset</em> i foreningen</h1>
+            <p class="sub">Frivillige uploader fra mobilen. AI læser beløb, dato og butik automatisk. Kassereren får alt sorteret per udvalg, klar til godkendelse.</p>
+            <div class="hero-actions">
+                <a href="#start" class="btn btn-primary btn-large">Skriv til mig</a>
+                <a href="#hvordan" class="btn btn-secondary btn-large">Se hvordan det virker</a>
+            </div>
+        </div>
+        <div class="hero-visual reveal">
+            <div class="phone-frame">
+                <img src="{{ url_for('static', filename='img/landing/upload-mobile.jpg') }}" alt="Mobile-upload af kvittering" loading="eager" width="290" height="628">
+            </div>
+            <div class="floating-badge floating-badge--top">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12 10 17 19 8"/></svg>
+                Beløb 149,95 kr genkendt
+            </div>
+            <div class="floating-badge floating-badge--bottom">
+                <span class="badge-dot"></span>
+                Festudvalget · Forplejning
+            </div>
+        </div>
     </div>
 
-    <div class="early-bird">
+    <div class="wrap">
+
+    <div class="early-bird reveal">
         <div class="early-bird__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
                 <path d="M12 2 L14.6 8.5 L21.5 9.4 L16.3 14 L17.8 21 L12 17.4 L6.2 21 L7.7 14 L2.5 9.4 L9.4 8.5 Z"/>
@@ -895,9 +1140,27 @@
         </div>
     </div>
     <p class="proof-note">Brugt i min egen forening siden oktober 2025, før jeg åbnede Kvitly for andre.</p>
+    </div>
 </header>
 
-<section class="section-soft" id="hvordan">
+<section class="dashboard-preview reveal">
+    <div class="wrap">
+        <div class="section-head">
+            <span class="eyebrow">Set fra kassererens stol</span>
+            <h2>Alt sorteret per <em>udvalg</em></h2>
+            <p>Forbrug per udvalg, charts over tid, godkend med ét klik.</p>
+        </div>
+        <div class="screenshot-frame">
+            <div class="browser-chrome">
+                <span></span><span></span><span></span>
+                <div class="browser-url">kvitly.dk/dashboard</div>
+            </div>
+            <img src="{{ url_for('static', filename='img/landing/dashboard-oversigt.jpg') }}" alt="Dashboard med KPI-kort og charts" loading="lazy" width="1280" height="800">
+        </div>
+    </div>
+</section>
+
+<section class="section-soft reveal" id="hvordan">
     <div class="wrap">
         <div class="section-head">
             <h2>Foreningens kasserer bruger for meget tid på det her</h2>
@@ -929,7 +1192,7 @@
     </div>
 </section>
 
-<section>
+<section class="reveal">
     <div class="wrap">
         <div class="section-head">
             <h2>Kvitly er bygget til <em>foreninger</em></h2>
@@ -961,7 +1224,7 @@
     </div>
 </section>
 
-<section class="section-soft">
+<section class="section-soft reveal">
     <div class="wrap">
         <div class="section-head">
             <h2>Sådan virker det</h2>
@@ -972,22 +1235,25 @@
                 <div class="card-num">I. Upload</div>
                 <h3>Frivillig uploader</h3>
                 <p>Fra mobilen, uden at installere en app. Tager 10 sekunder. Alle i foreningen kan bruge samme upload-link.</p>
+                <img class="card-screenshot" src="{{ url_for('static', filename='img/landing/upload-mobile.jpg') }}" alt="Upload-formen på mobil" loading="lazy" width="390" height="293">
             </div>
             <div class="card">
                 <div class="card-num">II. AI</div>
                 <h3>AI læser alt</h3>
                 <p>Beløb, dato, butik, kategori, valuta. Frivillige bekræfter inden de trykker indsend.</p>
+                <img class="card-screenshot" src="{{ url_for('static', filename='img/landing/dashboard-udgifter.jpg') }}" alt="Auto-genkendte felter i tabel" loading="lazy" width="1280" height="960">
             </div>
             <div class="card">
                 <div class="card-num">III. Dashboard</div>
                 <h3>Dashboardet viser alt</h3>
                 <p>Forbrug per udvalg, grafer over tid, godkend og udbetal med ét klik. Eksport til bogføring når I vil.</p>
+                <img class="card-screenshot" src="{{ url_for('static', filename='img/landing/dashboard-oversigt.jpg') }}" alt="Dashboard KPI-kort" loading="lazy" width="1280" height="960">
             </div>
         </div>
     </div>
 </section>
 
-<section id="pris">
+<section id="pris" class="reveal">
     <div class="wrap">
         <div class="section-head">
             <h2>Én pris. Ingen <em>valgparalyse.</em></h2>
@@ -1011,7 +1277,7 @@
     </div>
 </section>
 
-<section class="section-soft">
+<section class="section-soft reveal">
     <div class="wrap">
         <div class="section-head">
             <h2>Hvorfor Kvitly findes</h2>
@@ -1027,7 +1293,7 @@
     </div>
 </section>
 
-<section>
+<section class="reveal">
     <div class="wrap">
         <div class="section-head">
             <h2>Ofte stillede <em>spørgsmål</em></h2>
@@ -1061,7 +1327,7 @@
     </div>
 </section>
 
-<section class="section-soft" id="start">
+<section class="section-soft reveal" id="start">
     <div class="wrap">
         <div class="final">
             <h2>Få <em>Kvitly</em> til jeres forening</h2>
@@ -1090,6 +1356,24 @@
 </section>
 
 <script>
+// Scroll-triggered fade-in for sections. Respects prefers-reduced-motion.
+(function() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!('IntersectionObserver' in window)) {
+        document.querySelectorAll('.reveal').forEach(el => el.classList.add('in-view'));
+        return;
+    }
+    var io = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) {
+            if (e.isIntersecting) {
+                e.target.classList.add('in-view');
+                io.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -6% 0px' });
+    document.querySelectorAll('.reveal').forEach(function(el) { io.observe(el); });
+})();
+
 (function() {
     var form = document.getElementById('demo-form');
     var submit = document.getElementById('demo-submit');

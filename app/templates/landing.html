@@ -255,9 +255,26 @@
         /* Section base */
         section {
             padding: 3.5rem 0;
-            border-top: 1px solid var(--border);
             position: relative;
         }
+
+        /* ── Wave-dividers mellem sektioner ──
+           Hver wave SVG har bg = forrige sektions farve, fill = næste sektions farve.
+           Det giver en sømløs organisk overgang uden lige streger. */
+        .wave {
+            display: block;
+            width: 100%;
+            height: 60px;
+            margin: 0;
+            line-height: 0;
+            pointer-events: none;
+            position: relative;
+            z-index: 1;
+        }
+        .wave path { fill: currentColor; }
+        .wave--soft  { color: var(--bg-soft); background: var(--bg); }
+        .wave--paper { color: var(--bg);      background: var(--bg-soft); }
+        @media (max-width: 600px) { .wave { height: 40px; } }
         .section-soft {
             background: var(--bg-soft);
         }
@@ -725,7 +742,6 @@
             text-align: center;
             font-size: 0.85rem;
             color: var(--muted);
-            border-top: 1px solid var(--border);
             background: var(--bg);
         }
         footer .logo {
@@ -1052,6 +1068,8 @@
     <p class="proof-line">3–4 timer sparet hver måned · 95% OCR-præcision · 6 mdr i daglig drift før åbning</p>
 </header>
 
+<svg class="wave wave--soft" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0,30 C240,5 480,55 720,30 C960,5 1200,55 1440,30 L1440,60 L0,60 Z"/></svg>
+
 <section class="section-soft reveal" id="hvordan">
     <div class="wrap">
         <div class="section-head">
@@ -1083,7 +1101,9 @@
     </div>
 </section>
 
-<section class="section-soft reveal">
+<svg class="wave wave--paper" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0,30 C240,5 480,55 720,30 C960,5 1200,55 1440,30 L1440,60 L0,60 Z"/></svg>
+
+<section class="reveal">
     <div class="wrap">
         <div class="section-head">
             <h2>Kvitly er bygget til <em>foreninger</em></h2>
@@ -1129,7 +1149,9 @@
     </div>
 </section>
 
-<section id="pris" class="reveal">
+<svg class="wave wave--soft" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0,30 C240,5 480,55 720,30 C960,5 1200,55 1440,30 L1440,60 L0,60 Z"/></svg>
+
+<section id="pris" class="section-soft reveal">
     <div class="wrap">
         <div class="section-head">
             <h2>Én pris. Ingen <em>valgparalyse.</em></h2>
@@ -1151,7 +1173,9 @@
     </div>
 </section>
 
-<section class="section-soft reveal">
+<svg class="wave wave--paper" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0,30 C240,5 480,55 720,30 C960,5 1200,55 1440,30 L1440,60 L0,60 Z"/></svg>
+
+<section class="reveal">
     <div class="wrap">
         <div class="section-head">
             <h2>Hvorfor Kvitly findes</h2>
@@ -1167,7 +1191,9 @@
     </div>
 </section>
 
-<section class="reveal">
+<svg class="wave wave--soft" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0,30 C240,5 480,55 720,30 C960,5 1200,55 1440,30 L1440,60 L0,60 Z"/></svg>
+
+<section class="section-soft reveal">
     <div class="wrap">
         <div class="section-head">
             <h2>Ofte stillede <em>spørgsmål</em></h2>
@@ -1193,7 +1219,9 @@
     </div>
 </section>
 
-<section class="section-soft reveal" id="start">
+<svg class="wave wave--paper" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0,30 C240,5 480,55 720,30 C960,5 1200,55 1440,30 L1440,60 L0,60 Z"/></svg>
+
+<section class="reveal" id="start">
     <div class="wrap">
         <div class="final">
             <h2>Få <em>Kvitly</em> til jeres forening</h2>

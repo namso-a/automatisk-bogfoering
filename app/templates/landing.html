@@ -880,63 +880,6 @@
             .floating-badge { display: none; }
         }
 
-        /* ── Dashboard preview section ── */
-        .dashboard-preview { padding: 3rem 0 4rem; }
-        .dashboard-preview .section-head { margin-bottom: 2rem; }
-        .dashboard-preview .section-head h2 {
-            /* mindre end andre section-h2 (3.2rem) — er en peek, ikke et brand-moment */
-            font-size: clamp(1.7rem, 3.2vw, 2.3rem);
-        }
-        .dashboard-preview .section-head p { font-size: 0.98rem; }
-        .screenshot-frame {
-            max-width: 860px;
-            max-height: 520px;
-            margin: 0 auto;
-            border-radius: 12px;
-            overflow: hidden;             /* klipper bunden af screenshottet væk */
-            background: #fff;
-            border: 1px solid var(--border-strong);
-            box-shadow:
-                0 40px 80px -20px rgba(26, 22, 18, 0.22),
-                0 14px 30px -10px rgba(26, 22, 18, 0.08),
-                0 0 0 1px rgba(26, 22, 18, 0.03);
-            position: relative;
-            z-index: 2;
-        }
-        .browser-chrome {
-            background: var(--bg-soft);
-            padding: 0.7rem 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.85rem;
-            border-bottom: 1px solid var(--border);
-        }
-        .browser-chrome > span:nth-child(-n+3) {
-            width: 11px; height: 11px;
-            border-radius: 50%;
-            background: var(--border-strong);
-            flex-shrink: 0;
-        }
-        .browser-chrome > span:first-child { background: #e67767; }
-        .browser-chrome > span:nth-child(2) { background: #e8b94a; }
-        .browser-chrome > span:nth-child(3) { background: #4ab36c; }
-        .browser-url {
-            flex: 1;
-            text-align: center;
-            font-size: 0.78rem;
-            color: var(--muted);
-            background: var(--bg);
-            padding: 0.4rem 0.95rem;
-            border-radius: 100px;
-            max-width: 320px;
-            margin: 0 auto;
-            font-family: 'Inter', sans-serif;
-        }
-        .screenshot-frame > img {
-            width: 100%;
-            display: block;
-        }
-
         /* ── Card icons (Sådan virker det) ── */
         .card-icon {
             display: inline-flex;
@@ -1108,23 +1051,6 @@
 
     <p class="proof-line">3–4 timer sparet hver måned · 95% OCR-præcision · 6 mdr i daglig drift før åbning</p>
 </header>
-
-<section class="dashboard-preview reveal">
-    <div class="wrap">
-        <div class="section-head">
-            <span class="eyebrow">Set fra kassererens stol</span>
-            <h2>Alt sorteret per <em>udvalg</em></h2>
-            <p>Forbrug per udvalg, charts over tid, godkend med ét klik.</p>
-        </div>
-        <div class="screenshot-frame">
-            <div class="browser-chrome">
-                <span></span><span></span><span></span>
-                <div class="browser-url">kvitly.dk/dashboard</div>
-            </div>
-            <img src="{{ url_for('static', filename='img/landing/dashboard-oversigt.jpg') }}" alt="Dashboard med KPI-kort og charts" loading="lazy" width="1280" height="800">
-        </div>
-    </div>
-</section>
 
 <section class="section-soft reveal" id="hvordan">
     <div class="wrap">

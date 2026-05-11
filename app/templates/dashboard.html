@@ -967,6 +967,16 @@
             .card { padding: 0.9rem; }
             .card-value { font-size: 1.35rem; }
             .filter-group { flex: 1 1 100%; }
+            /* Tab-nav overflowed 4×"Indstillinger"-bredde knapper på 375px viewport
+               → horizontal scroll på hele siden. Tillad scroll lokalt på nav'en
+               i stedet, og skjul scrollbaren så det stadig ser rent ud. */
+            .tab-nav {
+                overflow-x: auto;
+                scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
+            }
+            .tab-nav::-webkit-scrollbar { display: none; }
+            .tab-btn { padding: 0.7rem 0.85rem; white-space: nowrap; flex-shrink: 0; }
             .filter-bar { gap: 0.6rem; }
             .detail-grid { grid-template-columns: 1fr; gap: 0.85rem; }
             .detail-field p { font-size: 0.95rem; }

@@ -93,6 +93,24 @@ def force_canonical_host():
         target = target[:-1]
     return redirect(target, code=301)
 
+
+@app.after_request
+def add_security_headers(resp):
+    """Baseline security headers — production hardening.
+
+    Skipper CSP for nu (kræver inline-script-nonce rewrite på dashboard + form).
+    HSTS sættes ikke på localhost-svar så dev ikke pinner sig selv på https.
+    """
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["X-Frame-Options"] = "DENY"
+    resp.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    resp.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    host = (request.host or "").lower()
+    if not host.startswith(("localhost", "127.", "192.168.", "10.")):
+        resp.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return resp
+
+
 # Rate limiter: anonymous /u/<token>/* routes are protected
 limiter = Limiter(
     get_remote_address,

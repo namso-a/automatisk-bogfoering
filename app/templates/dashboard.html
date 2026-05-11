@@ -1073,6 +1073,81 @@
             .cards-grid { grid-template-columns: 1fr; }
             .card-value { font-size: 1.5rem; }
         }
+
+        /* ── Cookie-banner (sticky bottom-left) ── */
+        .cookie-banner {
+            position: fixed;
+            bottom: 1.25rem;
+            left: 1.25rem;
+            z-index: 95;
+            max-width: 380px;
+            background: var(--card-bg);
+            border: 1px solid var(--warm);
+            border-radius: 12px;
+            padding: 1rem 1.1rem;
+            box-shadow:
+                0 22px 44px -16px rgba(26, 22, 18, 0.28),
+                0 6px 14px -4px rgba(26, 22, 18, 0.12);
+            opacity: 0;
+            transform: translateY(0.5rem);
+            transition: opacity 0.22s ease-out, transform 0.22s ease-out;
+        }
+        .cookie-banner.cookie-banner--in { opacity: 1; transform: translateY(0); }
+        .cookie-banner__body {
+            font-size: 0.85rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+        .cookie-banner__body strong {
+            display: block;
+            color: var(--ink);
+            margin-bottom: 0.35rem;
+            font-size: 0.92rem;
+        }
+        .cookie-banner__body a { color: var(--accent); }
+        .cookie-banner__actions {
+            margin-top: 0.85rem;
+            display: flex;
+            gap: 0.55rem;
+        }
+        .cookie-banner__btn {
+            flex: 1;
+            padding: 0.55rem 0.9rem;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid var(--warm);
+            background: transparent;
+            color: var(--ink);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .cookie-banner__btn--primary {
+            background: var(--ink);
+            color: var(--paper);
+            border-color: var(--ink);
+        }
+        .cookie-banner__btn--primary:hover,
+        .cookie-banner__btn--primary:focus-visible {
+            background: var(--accent);
+            border-color: var(--accent);
+            outline: none;
+        }
+        .cookie-banner__btn:not(.cookie-banner__btn--primary):hover,
+        .cookie-banner__btn:not(.cookie-banner__btn--primary):focus-visible {
+            background: var(--paper);
+            border-color: var(--ink);
+            outline: none;
+        }
+        @media (max-width: 600px) {
+            .cookie-banner {
+                right: 1rem;
+                left: 1rem;
+                bottom: 1rem;
+                max-width: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1353,6 +1428,36 @@
 
 <!-- Toast -->
 <div id="toast"></div>
+
+<!-- Cookie-banner: vises kun ved første besøg uden samtykke -->
+<aside id="cookie-banner" class="cookie-banner" hidden role="dialog" aria-label="Cookie-samtykke">
+    <div class="cookie-banner__body">
+        <strong>Vi bruger cookies</strong>
+        Kvitly bruger kun cookies der er nødvendige for at siden virker (login og samtykke-hukommelse). Vi tracker dig ikke. Læs mere i <a href="/privatlivspolitik" target="_blank" rel="noopener">Privatlivspolitik</a>.
+    </div>
+    <div class="cookie-banner__actions">
+        <button type="button" class="cookie-banner__btn cookie-banner__btn--primary" data-consent="all">Accepter</button>
+        <button type="button" class="cookie-banner__btn" data-consent="necessary">Kun nødvendige</button>
+    </div>
+</aside>
+<script>
+(function () {
+    var banner = document.getElementById('cookie-banner');
+    if (!banner) return;
+    try {
+        if (localStorage.getItem('kvitlyCookieConsent')) return;
+    } catch (e) { return; }
+    banner.hidden = false;
+    requestAnimationFrame(function () { banner.classList.add('cookie-banner--in'); });
+    banner.querySelectorAll('[data-consent]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            try { localStorage.setItem('kvitlyCookieConsent', btn.dataset.consent); } catch (e) {}
+            banner.classList.remove('cookie-banner--in');
+            setTimeout(function () { banner.hidden = true; }, 220);
+        });
+    });
+})();
+</script>
 
 <script>
 (function () {

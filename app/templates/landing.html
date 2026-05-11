@@ -929,6 +929,81 @@
             }
         }
 
+        /* ── Cookie-banner (sticky bottom-left, vises før beta-banner) ── */
+        .cookie-banner {
+            position: fixed;
+            bottom: 1.25rem;
+            left: 1.25rem;
+            z-index: 95;
+            max-width: 380px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-strong);
+            border-radius: 12px;
+            padding: 1rem 1.1rem;
+            box-shadow:
+                0 22px 44px -16px rgba(26, 22, 18, 0.28),
+                0 6px 14px -4px rgba(26, 22, 18, 0.12);
+            opacity: 0;
+            transform: translateY(0.5rem);
+            transition: opacity 0.22s ease-out, transform 0.22s ease-out;
+        }
+        .cookie-banner.cookie-banner--in { opacity: 1; transform: translateY(0); }
+        .cookie-banner__body {
+            font-size: 0.85rem;
+            color: var(--ink-dim);
+            line-height: 1.5;
+        }
+        .cookie-banner__body strong {
+            display: block;
+            color: var(--ink);
+            margin-bottom: 0.35rem;
+            font-size: 0.92rem;
+        }
+        .cookie-banner__body a { color: var(--accent); }
+        .cookie-banner__actions {
+            margin-top: 0.85rem;
+            display: flex;
+            gap: 0.55rem;
+        }
+        .cookie-banner__btn {
+            flex: 1;
+            padding: 0.55rem 0.9rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid var(--border-strong);
+            background: transparent;
+            color: var(--ink);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .cookie-banner__btn--primary {
+            background: var(--ink);
+            color: var(--bg);
+            border-color: var(--ink);
+        }
+        .cookie-banner__btn--primary:hover,
+        .cookie-banner__btn--primary:focus-visible {
+            background: var(--accent);
+            border-color: var(--accent);
+            outline: none;
+        }
+        .cookie-banner__btn:not(.cookie-banner__btn--primary):hover,
+        .cookie-banner__btn:not(.cookie-banner__btn--primary):focus-visible {
+            background: var(--bg-soft);
+            border-color: var(--ink);
+            outline: none;
+        }
+        @media (max-width: 600px) {
+            .cookie-banner {
+                right: 1rem;
+                left: 1rem;
+                bottom: 1rem;
+                max-width: none;
+            }
+        }
+
         /* ── Floating beta-banner (sticky bottom-right) ── */
         .beta-banner {
             position: fixed;
@@ -1330,6 +1405,17 @@
     </div>
 </footer>
 
+<aside id="cookie-banner" class="cookie-banner" hidden role="dialog" aria-label="Cookie-samtykke">
+    <div class="cookie-banner__body">
+        <strong>Vi bruger cookies</strong>
+        Kvitly bruger kun cookies der er nødvendige for at siden virker (login og samtykke-hukommelse). Vi tracker dig ikke. Læs mere i <a href="/privatlivspolitik">Privatlivspolitik</a>.
+    </div>
+    <div class="cookie-banner__actions">
+        <button type="button" class="cookie-banner__btn cookie-banner__btn--primary" data-consent="all">Accepter</button>
+        <button type="button" class="cookie-banner__btn" data-consent="necessary">Kun nødvendige</button>
+    </div>
+</aside>
+
 <aside id="beta-banner" class="beta-banner" hidden role="complementary" aria-label="Lukket beta-tilbud">
     <a href="#start" class="beta-banner__body">
         <svg class="beta-banner__star" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 2 L14.6 8.5 L21.5 9.4 L16.3 14 L17.8 21 L12 17.4 L6.2 21 L7.7 14 L2.5 9.4 L9.4 8.5 Z"/></svg>
@@ -1344,19 +1430,37 @@
 </aside>
 
 <script>
+// Cookie-banner: vises hvis kvitlyCookieConsent ikke er sat
 (function () {
-    var banner = document.getElementById('beta-banner');
+    var banner = document.getElementById('cookie-banner');
     if (!banner) return;
-    try {
-        if (localStorage.getItem('kvitlyBetaDismissed') === '1') return;
-    } catch (e) { /* localStorage blokeret — vis banner alligevel */ }
+    var consent = null;
+    try { consent = localStorage.getItem('kvitlyCookieConsent'); } catch (e) {}
+    if (consent) return showBetaBanner();
     banner.hidden = false;
-    requestAnimationFrame(function () { banner.classList.add('beta-banner--in'); });
-    banner.querySelector('.beta-banner__close').addEventListener('click', function () {
-        banner.classList.remove('beta-banner--in');
-        try { localStorage.setItem('kvitlyBetaDismissed', '1'); } catch (e) {}
-        setTimeout(function () { banner.hidden = true; }, 220);
+    requestAnimationFrame(function () { banner.classList.add('cookie-banner--in'); });
+    banner.querySelectorAll('[data-consent]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            try { localStorage.setItem('kvitlyCookieConsent', btn.dataset.consent); } catch (e) {}
+            banner.classList.remove('cookie-banner--in');
+            setTimeout(function () { banner.hidden = true; showBetaBanner(); }, 220);
+        });
     });
+
+    function showBetaBanner() {
+        var beta = document.getElementById('beta-banner');
+        if (!beta) return;
+        try {
+            if (localStorage.getItem('kvitlyBetaDismissed') === '1') return;
+        } catch (e) {}
+        beta.hidden = false;
+        requestAnimationFrame(function () { beta.classList.add('beta-banner--in'); });
+        beta.querySelector('.beta-banner__close').addEventListener('click', function () {
+            beta.classList.remove('beta-banner--in');
+            try { localStorage.setItem('kvitlyBetaDismissed', '1'); } catch (e) {}
+            setTimeout(function () { beta.hidden = true; }, 220);
+        });
+    }
 })();
 </script>
 
